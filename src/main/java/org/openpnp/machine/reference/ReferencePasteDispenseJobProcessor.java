@@ -63,6 +63,7 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         Abort,
         Skip,
         IgnoreContinue,
+        PickAgain,
         Reset
     }
 
@@ -176,13 +177,20 @@ public class ReferencePasteDispenseJobProcessor extends AbstractPasteDispenseJob
         fsm.send(Message.IgnoreContinue);
     }
 
+    public synchronized void pickAgain() throws Exception {
+        fsm.send(Message.PickAgain);
+    }
 
     public boolean canSkip() {
         return fsm.canSend(Message.Skip);
     }
 
-	public boolean canIgnoreContinue() {
-		return fsm.canSend(Message.IgnoreContinue);
+    public boolean canIgnoreContinue() {
+        return fsm.canSend(Message.IgnoreContinue);
+    }
+
+    public boolean canPickAgain() {
+        return fsm.canSend(Message.PickAgain);
 	}
 
     /**

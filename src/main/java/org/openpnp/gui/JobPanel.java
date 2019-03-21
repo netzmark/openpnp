@@ -96,6 +96,8 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
+import org.pmw.tinylog.Logger;
+
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
@@ -943,28 +945,37 @@ public class JobPanel extends JPanel {
             String retryOption = "Try Again"; //$NON-NLS-1$
             String skipOption = "Skip"; //$NON-NLS-1$
             String ignoreContinueOption = "Ignore and Continue"; //$NON-NLS-1$
+            String pickAgainOption = "Pick Again"; //$NON-NLS-1$ //added
             String pauseOption = "Pause Job"; //$NON-NLS-1$
 
+            if (jobProcessor.canPickAgain()) { //added
+                options.add(pickAgainOption);
+            }
             options.add(retryOption);
             if (jobProcessor.canSkip()) {
                 options.add(skipOption);
             }
             if (jobProcessor.canIgnoreContinue()) {
-            	options.add(ignoreContinueOption);
+                options.add(ignoreContinueOption);
             }
             options.add(pauseOption);
+
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, //$NON-NLS-1$
-                    options.toArray(), retryOption);
-            String selectedOption = options.get(result);
+                    options.toArray(), pickAgainOption);
+            String selectedOption = (result<0) ? "Pause Job" : options.get(result);
+            Logger.debug("Job error {}", selectedOption);
+
             if (selectedOption.equals(retryOption)) {
+            Logger.debug("Job error dialog choose: retry");
                 jobRun();
             }
-            // Skip
+            //skip
             else if (selectedOption.equals(skipOption)) {
                 UiUtils.messageBoxOnException(() -> {
                     // Tell the job processor to skip the current placement and then call jobRun()
                     // to start things back up, either running or stepping.
+                    Logger.debug("Job error dialog choose: skip");
                     jobSkip();
                 });
             }
@@ -972,7 +983,18 @@ public class JobPanel extends JPanel {
             else if (selectedOption.equals(ignoreContinueOption)) {
                 UiUtils.messageBoxOnException(() -> {
                     // Tell the job processor ignore error and continue as if everything were normal
+                    Logger.debug("Job error dialog choose: ignore/continue");
                     jobIgnoreContinue();
+                });
+            }
+            //pick/again
+            else if (selectedOption.equals(pickAgainOption)) { //added
+                UiUtils.messageBoxOnException(() -> {
+//                    if (state == State.Running) {
+//                        setState(State.Paused);
+//                    }
+                    Logger.debug("Job error dialog choose: pickAgain");
+                    jobPickAgain();
                 });
             }
             // Pause or cancel dialog
@@ -982,7 +1004,8 @@ public class JobPanel extends JPanel {
                 // to Stepping.
                 if (state == State.Running) {
                     try {
-                        setState(State.Paused);
+                    Logger.debug("Job error dialog choose: pause");
+                    setState(State.Paused);
                     }
                     catch (Exception e) {
                         // Since we are checking if we're in the Running state this should not
@@ -1006,6 +1029,17 @@ public class JobPanel extends JPanel {
         UiUtils.submitUiMachineTask(() -> {
             jobProcessor.ignoreContinue();
             jobRun();
+        });
+    }
+
+    public void jobPickAgain() { //added void
+        UiUtils.submitUiMachineTask(() -> {
+            jobProcessor.pickAgain(); 
+            jobRun(); 
+
+            if (state == State.Paused) {
+                setState(State.Running);
+            }
         });
     }
 
@@ -1141,7 +1175,7 @@ public class JobPanel extends JPanel {
             });
         }
     };
-    
+
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.ResetAllPlaced")); //$NON-NLS-1$
