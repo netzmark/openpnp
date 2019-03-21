@@ -612,99 +612,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * "fork and join" FSMs and I have brainstormed this type of system a bit in the image at:
      * https://imgur.com/a/63Y1t
      */
+    
     protected void doFeedAndPick() throws Exception {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
             }
-
-            Nozzle nozzle = plannedPlacement.nozzle;
-            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Placement placement = jobPlacement.placement;
-            Part part = placement.getPart();
-
-            if (!plannedPlacement.fed) {
-                Exception lastError = null;
-                Feeder lastErrorFeeder = null;
-                while (true) {
-                    // Find a compatible, enabled feeder
-                    Feeder feeder;
-                    try {
-                        feeder = findFeeder(machine, part);
-                    }
-                    catch (Exception e) {
-                        if (lastError != null) {
-                            throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
-                                    part.getId(), 
-                                    lastErrorFeeder.getName(), 
-                                    lastError.getMessage()), 
-                                    lastError);
-                        }
-                        else {
-                            throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
-                        }
-                    }
-                    plannedPlacement.feeder = feeder;
-
-                    // Feed the part
-                    try {
-                        // Try to feed the part. If it fails, retry the specified number of times
-                        // before giving up.
-                        retry(1 + feeder.getRetryCount(), () -> {
-                            fireTextStatus("Feeding %s from %s for %s.", part.getId(),
-                                    feeder.getName(), placement.getId());
-                                    Logger.debug("Attempt Feed {} from {} with {}.",
-                                    new Object[] {part, feeder, nozzle});
-
-                            feeder.feed(nozzle);
-
-                            Logger.debug("Fed {} from {} with {}.",
-                                    new Object[] {part, feeder, nozzle});
-                        });
-
-                        break;
-                    }
-                    catch (Exception e) {
-                        Logger.debug("Feed {} from {} with {} failed!",
-                                new Object[] {part.getId(), feeder, nozzle});
-                        // If the feed fails, disable the feeder and continue. If there are no
-                        // more valid feeders the findFeeder() call above will throw and exit the
-                        // loop.
-                        feeder.setEnabled(false);
-                        lastErrorFeeder = feeder;
-                        lastError = e;
-                    }
-                }
-                plannedPlacement.fed = true;
-            }
-
-            // Pick the part
-                while (true) {
-
-                    // Get the feeder that was used to feed
-                    Feeder feeder = plannedPlacement.feeder; 
-                	
-                    // Pick the part
-                        // Try to pick the part. If it fails, retry the specified number of times
-                        // before giving up.
-                        retry(feeder.getRetryCount(), () -> {
-                            fireTextStatus("Picking %s from %s for %s.", part.getId(),
-                                    feeder.getName(), placement.getId());
-                                    Logger.debug("Attempt Pick {} from {} with {}.",
-                                    new Object[] {part, feeder, nozzle});
-
-                                    // Move to the pick location
-                                    MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());                                    
-                                    
-                                    // Pick
-                                    nozzle.pick(part);
-
-                                    // Retract
-                                    nozzle.moveToSafeZ();
-                                    Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
-                        });
-                        break;
-                }
+            
+            
+     	   Nozzle nozzle = plannedPlacement.nozzle;
+           JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+           Placement placement = jobPlacement.placement;
+           Part part = placement.getPart();
+           
+            subFeedAndPick(part, nozzle);
 
                 plannedPlacement.stepComplete = true;
         }
@@ -712,7 +633,101 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         clearStepComplete();
     }
 
-    protected void doAlign() throws Exception {
+        public void subFeedAndPick(PlannedPlacement plannedPlacement) throws Exception{
+        	
+        	//PlannedPlacement plannedPlacement = null;
+        	
+        	   Nozzle nozzle = plannedPlacement.nozzle;
+               JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+               Placement placement = jobPlacement.placement;
+               Part part = placement.getPart();
+
+               if (!plannedPlacement.fed) {
+                   Exception lastError = null;
+                   Feeder lastErrorFeeder = null;
+                   while (true) {
+                       // Find a compatible, enabled feeder
+                       Feeder feeder;
+                       try {
+                           feeder = findFeeder(machine, part);
+                       }
+                       catch (Exception e) {
+                           if (lastError != null) {
+                               throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+                                       part.getId(), 
+                                       lastErrorFeeder.getName(), 
+                                       lastError.getMessage()), 
+                                       lastError);
+                           }
+                           else {
+                               throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
+                           }
+                       }
+                       plannedPlacement.feeder = feeder;
+
+                       // Feed the part
+                       try {
+                           // Try to feed the part. If it fails, retry the specified number of times
+                           // before giving up.
+                           retry(1 + feeder.getRetryCount(), () -> {
+                               fireTextStatus("Feeding %s from %s for %s.", part.getId(),
+                                       feeder.getName(), placement.getId());
+                                       Logger.debug("Attempt Feed {} from {} with {}.",
+                                       new Object[] {part, feeder, nozzle});
+
+                               feeder.feed(nozzle);
+
+                               Logger.debug("Fed {} from {} with {}.",
+                                       new Object[] {part, feeder, nozzle});
+                           });
+
+                           break;
+                       }
+                       catch (Exception e) {
+                           Logger.debug("Feed {} from {} with {} failed!",
+                                   new Object[] {part.getId(), feeder, nozzle});
+                           // If the feed fails, disable the feeder and continue. If there are no
+                           // more valid feeders the findFeeder() call above will throw and exit the
+                           // loop.
+                           feeder.setEnabled(false);
+                           lastErrorFeeder = feeder;
+                           lastError = e;
+                       }
+                   }
+                   plannedPlacement.fed = true;
+               }
+
+               // Pick the part
+                   while (true) {
+
+                       // Get the feeder that was used to feed
+                       Feeder feeder = plannedPlacement.feeder; 
+                   	
+                       // Pick the part
+                           // Try to pick the part. If it fails, retry the specified number of times
+                           // before giving up.
+                           retry(feeder.getRetryCount(), () -> {
+                               fireTextStatus("Picking %s from %s for %s.", part.getId(),
+                                       feeder.getName(), placement.getId());
+                                       Logger.debug("Attempt Pick {} from {} with {}.",
+                                       new Object[] {part, feeder, nozzle});
+
+                                       // Move to the pick location
+                                       MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());                                    
+                                       
+                                       // Pick
+                                       nozzle.pick(part);
+
+                                       // Retract
+                                       nozzle.moveToSafeZ();
+                                       Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
+                           });
+                           break;
+                   }
+          }
+	
+
+	protected void doAlign() throws Exception {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
