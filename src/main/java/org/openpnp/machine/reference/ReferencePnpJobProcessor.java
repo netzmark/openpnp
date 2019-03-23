@@ -79,7 +79,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Feed,
         Pick,
         Align,
-        PickAfterAlign, //added
+        //PickAfterAlign, //added
         Place,
         Cleanup,
         Stopped
@@ -160,11 +160,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     int cycles = 0;
     int nozzleTipChanges = 0;
-    
-    int alignCounter = 0;  //new
-    int maxAlignCount = 1; // new - this is temporary constant value
-    boolean dontDiscard = false; //new
-    
+   
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
@@ -205,12 +201,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
         fsm.add(State.Align, Message.IgnoreContinue, State.Align, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
-        fsm.add(State.Align, Message.PickAgain, State.PickAfterAlign, this::doPickAgain); //added
+        //fsm.add(State.Align, Message.PickAgain, State.Align, this::doPickAfterAlign); //added
 
-        fsm.add(State.PickAfterAlign, Message.Next, State.Align, this::doPickAfterAlign); //added
-        fsm.add(State.PickAfterAlign, Message.Skip, State.PickAfterAlign, this::doSkip, Message.Next); //added
-        fsm.add(State.PickAfterAlign, Message.IgnoreContinue, State.PickAfterAlign, this::doIgnoreContinue, Message.Next); //added
-        fsm.add(State.PickAfterAlign, Message.Abort, State.Cleanup, Message.Next); //added
+        //fsm.add(State.PickAfterAlign, Message.Next, State.Align, this::doPickAfterAlign); //added
+        //fsm.add(State.PickAfterAlign, Message.Skip, State.PickAfterAlign, this::doSkip, Message.Next); //added
+        //fsm.add(State.PickAfterAlign, Message.IgnoreContinue, State.PickAfterAlign, this::doIgnoreContinue, Message.Next); //added
+        //fsm.add(State.PickAfterAlign, Message.Abort, State.Cleanup, Message.Next); //added
 
         fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
         fsm.add(State.Place, Message.Skip, State.Place, this::doSkip, Message.Next);
@@ -230,21 +226,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         try{
             fsm.send(Message.Next);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
-
-            if (fsm.getState() == State.Align && alignCounter<maxAlignCount) { //new
-
-            	alignCounter++; // here we count the number of errors to be bypassed in Align.State
-                Logger.debug("alignCount: {}.", alignCounter);
-                pickAgain();
-            }
-            else {
-                alignCounter = 0; // if we are here it means the number of errors were reached
-                                  // and we'll count it from the begining after the manual
-                                  // <Pick Again> command choosing.
-                throw(e);
-            }
+            throw(e);
         }
 
         if (fsm.getState() == State.Stopped) {
@@ -621,17 +606,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                   
             subFeedAndPick(plannedPlacement); //I have extracted all this code to private void
                                               //because will need identical procedure to use in
-                                              //new doAlign() containing pciking the missing part.
+                                              //new doAlign() containing picking the missing part.
                                               //this way I don't duplicate the code and will have 
-                                              //more clearily visible. 
-
+                                              //more clearly visible. 
             plannedPlacement.stepComplete = true;
         }
 
         clearStepComplete();
     }
-
-
 
 	protected void doAlign() throws Exception {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
@@ -650,28 +632,58 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             PartAlignment partAlignment = findPartAligner(machine, part);
 
-            if(partAlignment!=null) {
-                plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
-                        partAlignment,
-                        part,
-                        boardLocation,
-                        placement.getLocation(), nozzle);
-                Logger.debug("Align {} with {}", part, nozzle);
-                alignCounter = 0; //new - aligning was positive and counter is reseted
-                Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
-            }
-            else
-            {
-                plannedPlacement.alignmentOffsets=null;
-                Logger.debug("Not aligning {} as no compatible enabled aligners defined",part);
-            }
+            int getAlignCount = 0;
+            int i=0;
 
+            while(i++<=getAlignCount) {
+            	if (getAlignCount!=0) {
+            	Logger.debug("Probe of Aligning nr: {}", i);
+            	}
+            	try {
+            		if(partAlignment!=null) {
+                        plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
+                            partAlignment,
+                            part,
+                            boardLocation,
+                            placement.getLocation(), nozzle);
+                            Logger.debug("Align {} with {}", part, nozzle);
+                            Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
+                            break;
+                    }
+                    else
+                        {
+                        plannedPlacement.alignmentOffsets=null;
+                        Logger.debug("Not aligning {} as no compatible enabled aligners defined",part);
+                        break;
+                     }        
+            	}
+            		
+            	catch (Exception e) {
+            		if(i<=getAlignCount) {
+                        fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
+            			discard(nozzle);
+            			subFeedAndPick(plannedPlacement);
+            		}
+            		else if(getAlignCount>0){
+            			throw new Exception(String.format(
+                                "ReferenceBottomVision (%s): No result found. <Try again> to Pick and Align again.",
+                                part.getId()));
+            			}
+            		else {
+            			throw new Exception(String.format(
+                                "ReferenceBottomVision (%s): No result found. <Try again> to Align again.",
+                                part.getId()));
+            		}
+                }
+            }
+            
             plannedPlacement.stepComplete = true;
         }
 
         clearStepComplete();
     }
-
+	
+	/*
     protected void doPickAfterAlign() throws Exception {
     	
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
@@ -679,13 +691,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 continue;
             }
            
-/*            
-            Nozzle nozzle = plannedPlacement.nozzle;
-            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Placement placement = jobPlacement.placement;
-            BoardLocation boardLocation = jobPlacement.boardLocation;
-            Part part = placement.getPart();
-*/            
+            
+//            Nozzle nozzle = plannedPlacement.nozzle;
+//            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+//            Placement placement = jobPlacement.placement;
+//            BoardLocation boardLocation = jobPlacement.boardLocation;
+//            Part part = placement.getPart();
+            
                 Nozzle nozzle = plannedNozzle;
                 Part part = plannedPart;
                 Logger.debug("doPickAgain part: {}, nozzle: {}", part.getId(), nozzle.getName());
@@ -725,11 +737,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
 
             plannedPlacement.stepComplete = true;
-            dontDiscard = false;
         }
         clearStepComplete();
     }
-
+*/
     protected void doPlace() throws Exception {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
@@ -1057,8 +1068,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     private void subFeedAndPick(PlannedPlacement plannedPlacement) throws Exception{
     	
-    	//PlannedPlacement plannedPlacement = null;
-    	
     	   Nozzle nozzle = plannedPlacement.nozzle;
            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
            Placement placement = jobPlacement.placement;
@@ -1075,14 +1084,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    }
                    catch (Exception e) {
                        if (lastError != null) {
-                           throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+                           throw new Exception(String.format("Unable1 to feed %s. Feeder %s: %s.", 
                                    part.getId(), 
                                    lastErrorFeeder.getName(), 
                                    lastError.getMessage()), 
                                    lastError);
                        }
                        else {
-                           throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
+                           throw new Exception(String.format("Unable2 to feed %s. No enabled feeder found.", part.getId()));
                        }
                    }
                    plannedPlacement.feeder = feeder;
@@ -1128,7 +1137,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    // Pick the part
                        // Try to pick the part. If it fails, retry the specified number of times
                        // before giving up.
-                       retry(feeder.getRetryCount(), () -> {
+                       retry(1+feeder.getRetryCount(), () -> {
                            fireTextStatus("Picking %s from %s for %s.", part.getId(),
                                    feeder.getName(), placement.getId());
                                    Logger.debug("Attempt Pick {} from {} with {}.",
