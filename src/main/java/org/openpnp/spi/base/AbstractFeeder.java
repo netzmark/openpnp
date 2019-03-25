@@ -27,6 +27,8 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     
     @Attribute(required=false)
     protected int retryCount = 3;
+    protected int alignRetryCount = 2;
+    protected int pickRetryCount = 4;
 
     protected Part part;
 
@@ -88,9 +90,26 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         return retryCount;
     }
 
+    public int getAlignRetryCount() {
+        return alignRetryCount;
+    }
+    
+    public int getPickRetryCount() {
+        return pickRetryCount;
+    }
+    
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
     }
+    
+    public void setAlignRetryCount(int alignRetryCount) {
+        this.alignRetryCount = alignRetryCount;
+    }
+    
+    public void setPickRetryCount(int pickRetryCount) {
+        this.pickRetryCount = pickRetryCount;
+    }
+    
 
     @Override
     public PropertySheet[] getPropertySheets() {

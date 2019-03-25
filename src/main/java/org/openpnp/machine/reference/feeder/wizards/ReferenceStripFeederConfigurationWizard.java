@@ -123,7 +123,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblPart;
     private JLabel lblRetryCount;
     private JTextField retryCountTf;
-
+    private JLabel lblAlignRetryCount; //bert
+    private JTextField alignRetryCountTf; //bert
+    private JLabel lblPickRetryCount; //bert
+    private JTextField pickRetryCountTf; //bert
+    
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
     private Location secondPartLocation;
@@ -141,6 +145,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -167,13 +173,34 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
 
-        lblRetryCount = new JLabel("Retry Count");
+        lblRetryCount = new JLabel("Feed Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
 
         retryCountTf = new JTextField();
         retryCountTf.setText("3");
         panelPart.add(retryCountTf, "4, 6, fill, default");
-        retryCountTf.setColumns(3);
+        retryCountTf.setColumns(20);
+        
+        // Added auto pick retry GUI stuff - //bert
+        
+        lblAlignRetryCount = new JLabel("Align Retry Count");
+        panelPart.add(lblAlignRetryCount, "6, 4, right, default");
+
+        alignRetryCountTf = new JTextField();
+        alignRetryCountTf.setText("2");
+        panelPart.add(alignRetryCountTf, "8, 4, fill, default");
+        alignRetryCountTf.setColumns(20);
+        
+        lblPickRetryCount = new JLabel("Pick Retry Count");
+        panelPart.add(lblPickRetryCount, "6, 6, right, default");
+
+        pickRetryCountTf = new JTextField();
+        pickRetryCountTf.setText("3");
+        panelPart.add(pickRetryCountTf, "8, 6, fill, default");
+        pickRetryCountTf.setColumns(20);
+        
+               
+        // done adding - Bert
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -344,6 +371,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
+        
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
@@ -371,6 +401,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeWidth);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+        ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf); //bert
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf); //bert
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartX);

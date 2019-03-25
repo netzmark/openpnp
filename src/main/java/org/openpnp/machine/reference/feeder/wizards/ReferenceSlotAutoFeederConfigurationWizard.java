@@ -231,6 +231,14 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -328,12 +336,34 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         rotPickLocTf.setColumns(10);
         whateverPanel.add(pickLocButtons, "12, 6");
         
-        JLabel lblRetryCount = new JLabel("Retry Count");
+        JLabel lblRetryCount = new JLabel("Feed Retry Count");
         whateverPanel.add(lblRetryCount, "2, 8, right, default");
         
         retryCountTf = new JTextField();
         whateverPanel.add(retryCountTf, "4, 8");
         retryCountTf.setColumns(10);
+        
+// Added auto pick retry GUI stuff - //bert
+        
+        JLabel lblAlignRetryCount = new JLabel("Align Retry Count");
+        whateverPanel.add(lblAlignRetryCount, "6, 8, right, default");
+
+        alignRetryCountTf = new JTextField();
+        alignRetryCountTf.setText("2");
+        whateverPanel.add(alignRetryCountTf, "8, 8, fill, default");
+        alignRetryCountTf.setColumns(2);
+        
+        JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
+        whateverPanel.add(lblPickRetryCount, "10, 8, right, default");
+
+        pickRetryCountTf = new JTextField();
+        pickRetryCountTf.setText("3");
+        whateverPanel.add(pickRetryCountTf, "12, 8, fill, default");
+        pickRetryCountTf.setColumns(2);
+        
+               
+        // done adding - Bert
+        
         
         bankNameTf = new JTextField();
         whateverPanel.add(bankNameTf, "8, 10, 3, 1");
@@ -373,6 +403,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         
         
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
 
         /**
          * Note that we set up the bindings here differently than everywhere else. In most
@@ -446,6 +478,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(rotOffsetTf);
         
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+        ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf); //bert
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf); //bert
         
         feederPartCb.addActionListener(e -> {
             notifyChange();
@@ -508,6 +542,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private JTextField zPickLocTf;
     private JTextField rotPickLocTf;
     private JTextField retryCountTf;
+    private JTextField alignRetryCountTf; //bert
+    private JTextField pickRetryCountTf; //bert
     private LocationButtonsPanel offsetLocButtons;
     private LocationButtonsPanel pickLocButtons;
 }

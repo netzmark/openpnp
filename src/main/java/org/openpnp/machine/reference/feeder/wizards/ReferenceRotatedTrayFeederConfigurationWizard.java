@@ -100,6 +100,10 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private LocationButtonsPanel locationButtonsPanel;
 	private LocationButtonsPanel lastLocationButtonsPanel;
 	private JTextField retryCountTf;
+	private JLabel lblAlignRetryCount; //bert
+    private JTextField alignRetryCountTf; //bert
+    private JLabel lblPickRetryCount; //bert
+    private JTextField pickRetryCountTf; //bert
 
 	/**
 	 * @wbp.parser.constructor
@@ -120,7 +124,10 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		contentPanel.add(panelPart);
 		panelPart.setLayout(new FormLayout(
 				new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC,
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, 
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+						FormSpecs.RELATED_GAP_COLSPEC,
 						ColumnSpec.decode("default:grow"), },
 				new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
 						FormSpecs.DEFAULT_ROWSPEC, }));
@@ -149,13 +156,34 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
 		panelPart.add(comboBoxPart, "4, 2, left, default");
 
-		JLabel lblRetryCount = new JLabel("Retry Count");
+		JLabel lblRetryCount = new JLabel("Feed Retry Count");
 		panelPart.add(lblRetryCount, "2, 4, right, default");
 
 		retryCountTf = new JTextField();
 		retryCountTf.setText("3");
 		panelPart.add(retryCountTf, "4, 4");
 		retryCountTf.setColumns(3);
+		
+// Added auto pick retry GUI stuff - //bert
+        
+        lblAlignRetryCount = new JLabel("Align Retry Count");
+        panelPart.add(lblAlignRetryCount, "6, 2, right, default");
+
+        alignRetryCountTf = new JTextField();
+        alignRetryCountTf.setText("2");
+        panelPart.add(alignRetryCountTf, "8, 2, fill, default");
+        alignRetryCountTf.setColumns(20);
+        
+        lblPickRetryCount = new JLabel("Pick Retry Count");
+        panelPart.add(lblPickRetryCount, "6, 4, right, default");
+
+        pickRetryCountTf = new JTextField();
+        pickRetryCountTf.setText("3");
+        panelPart.add(pickRetryCountTf, "8, 4, fill, default");
+        pickRetryCountTf.setColumns(20);
+        
+               
+        // done adding - Bert
 
 		if (includePickLocation) {
 			panelLocation = new JPanel();
@@ -396,6 +424,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 		addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
+		addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
 
 		if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();
@@ -442,6 +472,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTrayRotation);
 		ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+		ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf); //bert
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf); //bert
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountRows);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountCols);
 		ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
