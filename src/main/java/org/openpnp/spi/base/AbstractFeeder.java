@@ -27,8 +27,12 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     
     @Attribute(required=false)
     protected int retryCount = 3;
-    protected int alignRetryCount = 2;
-    protected int pickRetryCount = 4;
+    
+    @Attribute(required=false)    
+    protected int alignRetryCount = 1;
+    
+    @Attribute(required=false)    
+    protected int pickRetryCount = 2;
 
     protected Part part;
 

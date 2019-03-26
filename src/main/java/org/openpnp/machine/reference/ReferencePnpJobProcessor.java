@@ -629,8 +629,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	/*
 	 * TODO: This is modified doAlign.
 	 * Now if alignment fails due to lost or wrong picked part, the part is discarded and tried to 
-	 * FeedAndPick pick again and then Aligned again with programmable counter (Align Retry Count).
-	 * (In the section above see description how operates new doPickAndFeed).
+	 * subFeedAndPick pick again and then Aligned again with programmable counter (Align Retry Count).
+	 * (In the section above see description how operates new modified doPickAndFeed).
 	 * If all this fails and user will choose <try again> the part is again picked and aligned.
 	 */	
 	protected void doAlign() throws Exception {
@@ -656,7 +656,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             while(i++<=alignCount) {
             	if (alignCount==0) {	//protection against accidental possible situation: User has changed feeder'a settings
             							//to 0 during the doAlign performing and then bottom vision is skipped. 
-            							//Low chance for occurrence but who knows..., better be secured.
+            							//Low chance for occurrence but who knows..., better to be protected.
             		dontAlign=false;		
             	}
             	try {
@@ -694,7 +694,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             		else if(alignCount>0){
             			//dontAlign = true;				//if this is commented - if dialog message is thrown, user may manually 
             											//correct the part on nozzle and after <Try Again> the part is tried to 
-            											//be aligned without discarding. To consider.
+            											//be aligned without discarding. To consider and tests.
             			throw new Exception(String.format(
                                 "ReferenceBottomVision (%s): No result found. <Try again> to Pick and Align again.",
                                 part.getId()));
@@ -712,65 +712,71 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         clearStepComplete();
     }
+
 	
 	/*
-    protected void doPickAfterAlign() throws Exception {
-    	
-        for (PlannedPlacement plannedPlacement : plannedPlacements) {
-            if (plannedPlacement.stepComplete) {
-                continue;
-            }
-           
-            
-//            Nozzle nozzle = plannedPlacement.nozzle;
-//            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-//            Placement placement = jobPlacement.placement;
-//            BoardLocation boardLocation = jobPlacement.boardLocation;
-//            Part part = placement.getPart();
-            
-                Nozzle nozzle = plannedNozzle;
-                Part part = plannedPart;
-                Logger.debug("doPickAgain part: {}, nozzle: {}", part.getId(), nozzle.getName());
-                Feeder feeder = null;
+	 * TODO: This is related to do pick and align again feature.
+	 * Temporary not used but left nod cleaned up before the final decision whether the solution used 
+	 * on the momment is really optimal.
+	 */	
 
-                // discard the part
-              //  if (dontDiscard == false) {
-              //  fireTextStatus("Discarding %s from %s.", part.getId(), nozzle.getName());
-              //  discard(nozzle);
-              //  dontDiscard = true; //we don't need discard in case when only vacuum failed
-              //  }
-                
-                // find a feeder to feed and feed it - should we feed in accordance to counter...?
-                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                    if (f.getPart() == part && f.isEnabled()) {
-                        feeder = f;
-                    }
-                }
-                if (feeder == null) {
-                    throw new Exception("No valid feeder found for " + part.getId());
-                }
-                feeder.feed(nozzle);
+//    protected void doPickAfterAlign() throws Exception {
+//    	
+//        for (PlannedPlacement plannedPlacement : plannedPlacements) {
+//            if (plannedPlacement.stepComplete) {
+//                continue;
+//            }
+//           
+//            
+// //            Nozzle nozzle = plannedPlacement.nozzle;
+// //            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+// //            Placement placement = jobPlacement.placement;
+// //            BoardLocation boardLocation = jobPlacement.boardLocation;
+// //            Part part = placement.getPart();
+//            
+//                Nozzle nozzle = plannedNozzle;
+//                Part part = plannedPart;
+//                Logger.debug("doPickAgain part: {}, nozzle: {}", part.getId(), nozzle.getName());
+//                Feeder feeder = null;
+//
+//                // discard the part
+//              //  if (dontDiscard == false) {
+//              //  fireTextStatus("Discarding %s from %s.", part.getId(), nozzle.getName());
+//              //  discard(nozzle);
+//              //  dontDiscard = true; //we don't need discard in case when only vacuum failed
+//              //  }
+//                
+//                // find a feeder to feed and feed it - should we feed in accordance to counter...?
+//                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+//                    if (f.getPart() == part && f.isEnabled()) {
+//                        feeder = f;
+//                    }
+//                }
+//                if (feeder == null) {
+//                    throw new Exception("No valid feeder found for " + part.getId());
+//                }
+//                feeder.feed(nozzle);
+//
+//                // move to pick part location
+//                fireTextStatus("Picking again %s with %s.", part.getId(), nozzle.getName());
+//                Location pickLocation = feeder.getPickLocation();
+//                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+//
+//                // pick the part
+//                fireTextStatus("Picking again %s with %s.", part.getId(), nozzle.getName());
+//                nozzle.pick(part);
+//                nozzle.moveToSafeZ();
+//
+//                // feed after pick
+//                if (feeder != null) {
+//                feeder.postPick(nozzle);
+//                }
+//
+//            plannedPlacement.stepComplete = true;
+//        }
+//        clearStepComplete();
+//    }
 
-                // move to pick part location
-                fireTextStatus("Picking again %s with %s.", part.getId(), nozzle.getName());
-                Location pickLocation = feeder.getPickLocation();
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-
-                // pick the part
-                fireTextStatus("Picking again %s with %s.", part.getId(), nozzle.getName());
-                nozzle.pick(part);
-                nozzle.moveToSafeZ();
-
-                // feed after pick
-                if (feeder != null) {
-                feeder.postPick(nozzle);
-                }
-
-            plannedPlacement.stepComplete = true;
-        }
-        clearStepComplete();
-    }
-*/
     protected void doPlace() throws Exception {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
@@ -1003,7 +1009,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
     }
-    
+ 
+	/*
+	 * TODO: This is related to do pick and align again feature.
+	 * Temporary not used but left nod cleaned up before the final decision whether the solution used 
+	 * on the momment is really optimal.
+	 */	
     protected void doPickAgain() throws Exception {
 
         if (plannedPlacements.size() > 0) {
