@@ -987,7 +987,7 @@ public class JobPanel extends JPanel {
                     jobIgnoreContinue();
                 });
             }
-            //pick/again
+            //pick/again  //temporary not used
             else if (selectedOption.equals(pickAgainOption)) { //added
                 UiUtils.messageBoxOnException(() -> {
 //                    if (state == State.Running) {
@@ -1032,7 +1032,7 @@ public class JobPanel extends JPanel {
         });
     }
 
-    public void jobPickAgain() { //added void
+    public void jobPickAgain() { //temporary not used
         UiUtils.submitUiMachineTask(() -> {
             jobProcessor.pickAgain(); 
             jobRun(); 

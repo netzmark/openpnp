@@ -79,7 +79,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Feed,
         Pick,
         Align,
-        //PickAfterAlign, //added
+        //PickAfterAlign,  //temporary not used
         Place,
         Cleanup,
         Stopped
@@ -92,7 +92,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Abort,
         Skip,
         IgnoreContinue,
-        PickAgain, //added
+        PickAgain, //temporary not used
         Reset
     }
 
@@ -107,7 +107,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
         public boolean fed;
-        public boolean picked;
+      //public boolean picked; //temporary not used
+        public boolean aligned;
         public boolean stepComplete;
 
         public PlannedPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
@@ -265,7 +266,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.send(Message.IgnoreContinue);
     }
 
-    public synchronized void pickAgain() throws Exception { //added
+    public synchronized void pickAgain() throws Exception { //temporary not used
         fsm.send(Message.PickAgain);
     }
     /*
@@ -293,7 +294,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     public boolean canPickAgain() {
-        return fsm.canSend(Message.PickAgain); //added
+        return fsm.canSend(Message.PickAgain); //temporary not used
     }
     /**
      * Validate that there is a job set before allowing it to start.
@@ -657,13 +658,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             	if (alignCount==0) {	//protection against accidental possible situation: User has changed feeder'a settings
             							//to 0 during the doAlign performing and then bottom vision is skipped. 
             							//Low chance for occurrence but who knows..., better to be protected.
-            		dontAlign=false;		
+            		//dontAlign=false;	
+            		plannedPlacement.aligned=false;	
             	}
             	try {
             		if(partAlignment!=null) {
-            			if(dontAlign==true) { 		//don't perform aligning if pressed "try again" after the picking was 
-            										//failed and there is no part on the nozzle.
-            				throw new Exception(); 	//need exception to not align but go to catch and next part picking.
+            			//if(dontAlign==true) { 		//block useless aligning if pressed "try again" after the picking was 
+            											//failed and there must be no part on the nozzle.
+            			if(plannedPlacement.aligned){	
+            				throw new Exception(); 		//need exception to not align but go to catch and start next part picking.
             			}
                     	Logger.debug("Probe of Aligning nr: {}", i);                        
             			plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
@@ -686,10 +689,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             		if(i<=alignCount) {
                         fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
             			discard(nozzle);
-            			dontAlign = true;				//if picking will fail we don't want perform empty align at "tray again".
-            			plannedPlacement.fed = false; 	// we go to pick so we also must to feed.
-            			subFeedAndPick(plannedPlacement);
-            			dontAlign = false;				//picking succeeded, we need align it.
+            			
+            			//dontAlign = true;				
+            			plannedPlacement.aligned=true;		//it's not aligned of course, but if picking-again will fail and
+            												//user choose <try again> - it will reinitialize doAlign(), so 
+            												//we don't need to perform aligning on empty nozzle but just start
+            												//feedAndPick procedure immediately.
+            			
+            			plannedPlacement.fed = false; 	
+            			subFeedAndPick(plannedPlacement);	// we go to pick so we also must to feed.
+            			
+            			//dontAlign = false;				
+            			plannedPlacement.aligned=false;		//picking was succeeded so we need to align the part.
             		}
             		else if(alignCount>0){
             			//dontAlign = true;				//if this is commented - if dialog message is thrown, user may manually 
@@ -717,7 +728,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	/*
 	 * TODO: This is related to do pick and align again feature.
 	 * Temporary not used but left nod cleaned up before the final decision whether the solution used 
-	 * on the momment is really optimal.
+	 * on the moment is really optimal.
 	 */	
 
 //    protected void doPickAfterAlign() throws Exception {
@@ -1013,7 +1024,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	/*
 	 * TODO: This is related to do pick and align again feature.
 	 * Temporary not used but left nod cleaned up before the final decision whether the solution used 
-	 * on the momment is really optimal.
+	 * on the moment is really optimal.
 	 */	
     protected void doPickAgain() throws Exception {
 
@@ -1173,12 +1184,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                }
                //plannedPlacement.fed = true; 	//we don't set it here after feed to can feed again in case of 
     											//"Pick the Part" failed and doFeedAndPick repeated.
-    											//But maybe we should and then set it false in Pick The Part loop?
+    											//or we can set it here and then set "false" at the next step.
            }
 
            // Pick the part
                while (true) {
-
+            	 //plannedPlacement.fed = false;
+            	   
                    // Get the feeder that was used to feed
                    Feeder feeder = plannedPlacement.feeder; 
                	
@@ -1205,11 +1217,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                        }
                        
                    });
-                   plannedPlacement.fed = true; //for any case we leave the subFeedAndPick with status "fed".
-                   								//I'm not convinced if we need it a yet for anything at all.
-                   								//But highly likely I don't understand something with "find valid feeder".
                    break;
                }
+               plannedPlacement.fed = true;
       }
 
     
