@@ -79,7 +79,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Feed,
         Pick,
         Align,
-        //PickAfterAlign,  //temporary not used
         Place,
         Cleanup,
         Stopped
@@ -92,7 +91,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Abort,
         Skip,
         IgnoreContinue,
-        PickAgain, //temporary not used
         Reset
     }
 
@@ -106,9 +104,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public final Nozzle nozzle;
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
-        public boolean fed;
-      //public boolean picked; //temporary not used
-        public boolean aligned;
+        public boolean fed; //temporary not used
+        public boolean picked; //temporary not used
+        public boolean aligned; //temporary not used
         public boolean stepComplete;
 
         public PlannedPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
@@ -202,12 +200,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Align, Message.Skip, State.Align, this::doSkip, Message.Next);
         fsm.add(State.Align, Message.IgnoreContinue, State.Align, this::doIgnoreContinue, Message.Next);
         fsm.add(State.Align, Message.Abort, State.Cleanup, Message.Next);
-        //fsm.add(State.Align, Message.PickAgain, State.Align, this::doPickAfterAlign); //added
-
-        //fsm.add(State.PickAfterAlign, Message.Next, State.Align, this::doPickAfterAlign); //added
-        //fsm.add(State.PickAfterAlign, Message.Skip, State.PickAfterAlign, this::doSkip, Message.Next); //added
-        //fsm.add(State.PickAfterAlign, Message.IgnoreContinue, State.PickAfterAlign, this::doIgnoreContinue, Message.Next); //added
-        //fsm.add(State.PickAfterAlign, Message.Abort, State.Cleanup, Message.Next); //added
 
         fsm.add(State.Place, Message.Next, State.Plan, this::doPlace);
         fsm.add(State.Place, Message.Skip, State.Place, this::doSkip, Message.Next);
@@ -266,9 +258,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.send(Message.IgnoreContinue);
     }
 
-    public synchronized void pickAgain() throws Exception { //temporary not used
-        fsm.send(Message.PickAgain);
-    }
     /*
      * TODO Due to the Align Skip issue I think we'd be better off replacing this API with
      * something like List<Message> getOptions(). This would return a list of options that the
@@ -293,9 +282,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         return fsm.canSend(Message.IgnoreContinue);
     }
 
-    public boolean canPickAgain() {
-        return fsm.canSend(Message.PickAgain); //temporary not used
-    }
     /**
      * Validate that there is a job set before allowing it to start.
      * 
@@ -624,6 +610,105 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         clearStepComplete();
     }
 
+    /*
+     * TODO: This is the code extracted from original doFeedAndPick.
+     * Exactly the same procedure I need in both doFeedAndPick and new doAlign.
+     * So I did it to don't duplicate the code and get better transparency in 
+     * doFeedAndPick and in new doAlign.
+     */
+    private void subFeedAndPick(PlannedPlacement plannedPlacement) throws Exception{
+    		Nozzle nozzle = plannedPlacement.nozzle;
+    		JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+    		Placement placement = jobPlacement.placement;
+    		Part part = placement.getPart();
+
+    		/////if (!plannedPlacement.fed) {
+    			Exception lastError = null;
+    			Feeder lastErrorFeeder = null;
+    			while (true) {
+                   // Find a compatible, enabled feeder
+                   Feeder feeder;
+                   try {
+                       feeder = findFeeder(machine, part);
+                   }
+                   catch (Exception e) {
+                       if (lastError != null) {
+                           throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+                                   part.getId(), 
+                                   lastErrorFeeder.getName(), 
+                                   lastError.getMessage()), 
+                                   lastError);
+                       }
+                       else {
+                           throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
+                       }
+                   }
+                   plannedPlacement.feeder = feeder;
+
+                   // Feed the part
+                   try {
+                       // Try to feed the part. If it fails, retry the specified number of times
+                       // before giving up.
+                       retry(1 + feeder.getRetryCount(), () -> {
+                           fireTextStatus("Feeding %s from %s for %s.", part.getId(),
+                                   feeder.getName(), placement.getId());
+                                   Logger.debug("Attempt Feed {} from {} with {}.",
+                                   new Object[] {part, feeder, nozzle});
+
+                           feeder.feed(nozzle);
+                           fireTextStatus("Fed %s from %s for %s.", part.getId(),
+                                   feeder.getName(), placement.getId());
+                           Logger.debug("Fed {} from {} with {}.",
+                                   new Object[] {part, feeder, nozzle});
+                       });
+                       break;
+                   }
+                   catch (Exception e) {
+                       Logger.debug("Feed {} from {} with {} failed!",
+                               new Object[] {part.getId(), feeder, nozzle});
+                       // If the feed fails, disable the feeder and continue. If there are no
+                       // more valid feeders the findFeeder() call above will throw and exit the
+                       // loop.
+                       feeder.setEnabled(false);
+                       lastErrorFeeder = feeder;
+                       lastError = e;
+                   }
+               }
+           /////}
+
+           // Pick the part
+               while (true) {
+            	   
+                   // Get the feeder that was used to feed
+                   Feeder feeder = plannedPlacement.feeder; 
+               	
+                   retry(1+feeder.getPickRetryCount(), () -> {
+                       fireTextStatus("Picking %s from %s for %s.", part.getId(),
+                               feeder.getName(), placement.getId());
+                       Logger.debug("Attempt Pick {} from {} with {}.",
+                               new Object[] {part, feeder, nozzle});
+
+                       // Move to the pick location
+                       MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());                                    
+                                   
+                       // Pick
+                       nozzle.pick(part);
+
+                       // Retract
+                       nozzle.moveToSafeZ();
+                       fireTextStatus("Picked %s from %s for %s.", part.getId(),
+                               feeder.getName(), placement.getId());
+                       Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
+                       
+                       // feed after pick
+                       if (feeder != null) {
+                       feeder.postPick(nozzle);
+                       }
+                   });
+                   break;
+               }
+               /////plannedPlacement.fed = true;		//we don't need it but let's check it...
+       }
     
 	boolean dontAlign=false;	//we need condition to don't do Aligning after the part was not picked
 								//during ordered pickAgain in doAlign, but just pick it again immediately.
@@ -655,17 +740,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             int i=0;
             
             while(i++<=alignCount) {
-            	if (alignCount==0) {	//protection against accidental possible situation: User has changed feeder'a settings
-            							//to 0 during the doAlign performing and then bottom vision is skipped. 
+            	if (alignCount==0) {	//protection against accidental possible situation: User has changed feeder's settings
+            							//to 0 during the doAlign repetitions performing and then bottom vision is skipped. 
             							//Low chance for occurrence but who knows..., better to be protected.
-            		//dontAlign=false;	
-            		plannedPlacement.aligned=false;	
+            		dontAlign=false;	
+            		//plannedPlacement.aligned=false;	
             	}
             	try {
             		if(partAlignment!=null) {
-            			//if(dontAlign==true) { 		//block useless aligning if pressed "try again" after the picking was 
-            											//failed and there must be no part on the nozzle.
-            			if(plannedPlacement.aligned){	
+            			if(dontAlign==true) { 		//block useless aligning if pressed "try again" after the picking was 
+            										//failed and there must be no part on the nozzle.
+            			//if(plannedPlacement.aligned){	
             				throw new Exception(); 		//need exception to not align but go to catch and start next part picking.
             			}
                     	Logger.debug("Probe of Aligning nr: {}", i);                        
@@ -687,28 +772,32 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             		
             	catch (Exception e) {
             		if(i<=alignCount) {
-                        fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
+            			fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
             			discard(nozzle);
             			
-            			//dontAlign = true;				
-            			plannedPlacement.aligned=true;		//it's not aligned of course, but if picking-again will fail and
+            			dontAlign = true;				
+            			//plannedPlacement.aligned=true;		//it's not aligned of course, but if picking-again will fail and
             												//user choose <try again> - it will reinitialize doAlign(), so 
             												//we don't need to perform aligning on empty nozzle but just start
             												//feedAndPick procedure immediately.
             			
-            			plannedPlacement.fed = false; 	
-            			subFeedAndPick(plannedPlacement);	// we go to pick so we also must to feed.
+            			/////plannedPlacement.fed = false;		// we go to pick new part so we also must to feed.
+                        fireTextStatus("Picking again %s from %s for %s.", part.getId(),
+                                feeder.getName(), placement.getId());
+            			subFeedAndPick(plannedPlacement);
             			
-            			//dontAlign = false;				
-            			plannedPlacement.aligned=false;		//picking was succeeded so we need to align the part.
+            			dontAlign = false;				
+            			//plannedPlacement.aligned=false;		//picking was succeeded so we need to align the part.
             		}
             		else if(alignCount>0){
+            			//plannedPlacement.aligned=true;
             			//dontAlign = true;				//if this is commented - if dialog message is thrown, user may manually 
             											//correct the part on nozzle and after <Try Again> the part is tried to 
             											//be aligned without discarding. To consider and tests.
             			throw new Exception(String.format(
                                 "ReferenceBottomVision (%s): No result found. <Try again> to Pick and Align again.",
                                 part.getId()));
+            		//	throw (e);
             			}
             		else {
             			throw new Exception(String.format(
@@ -723,70 +812,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         clearStepComplete();
     }
-
-	
-	/*
-	 * TODO: This is related to do pick and align again feature.
-	 * Temporary not used but left nod cleaned up before the final decision whether the solution used 
-	 * on the moment is really optimal.
-	 */	
-
-//    protected void doPickAfterAlign() throws Exception {
-//    	
-//        for (PlannedPlacement plannedPlacement : plannedPlacements) {
-//            if (plannedPlacement.stepComplete) {
-//                continue;
-//            }
-//           
-//            
-// //            Nozzle nozzle = plannedPlacement.nozzle;
-// //            JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-// //            Placement placement = jobPlacement.placement;
-// //            BoardLocation boardLocation = jobPlacement.boardLocation;
-// //            Part part = placement.getPart();
-//            
-//                Nozzle nozzle = plannedNozzle;
-//                Part part = plannedPart;
-//                Logger.debug("doPickAgain part: {}, nozzle: {}", part.getId(), nozzle.getName());
-//                Feeder feeder = null;
-//
-//                // discard the part
-//              //  if (dontDiscard == false) {
-//              //  fireTextStatus("Discarding %s from %s.", part.getId(), nozzle.getName());
-//              //  discard(nozzle);
-//              //  dontDiscard = true; //we don't need discard in case when only vacuum failed
-//              //  }
-//                
-//                // find a feeder to feed and feed it - should we feed in accordance to counter...?
-//                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-//                    if (f.getPart() == part && f.isEnabled()) {
-//                        feeder = f;
-//                    }
-//                }
-//                if (feeder == null) {
-//                    throw new Exception("No valid feeder found for " + part.getId());
-//                }
-//                feeder.feed(nozzle);
-//
-//                // move to pick part location
-//                fireTextStatus("Picking again %s with %s.", part.getId(), nozzle.getName());
-//                Location pickLocation = feeder.getPickLocation();
-//                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-//
-//                // pick the part
-//                fireTextStatus("Picking again %s with %s.", part.getId(), nozzle.getName());
-//                nozzle.pick(part);
-//                nozzle.moveToSafeZ();
-//
-//                // feed after pick
-//                if (feeder != null) {
-//                feeder.postPick(nozzle);
-//                }
-//
-//            plannedPlacement.stepComplete = true;
-//        }
-//        clearStepComplete();
-//    }
 
     protected void doPlace() throws Exception {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
@@ -1021,28 +1046,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
  
-	/*
-	 * TODO: This is related to do pick and align again feature.
-	 * Temporary not used but left nod cleaned up before the final decision whether the solution used 
-	 * on the moment is really optimal.
-	 */	
-    protected void doPickAgain() throws Exception {
-
-        if (plannedPlacements.size() > 0) {
-            for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                if (plannedPlacement.stepComplete) {
-                    // go over placements having the current step already completed
-                    continue;
-                }
-                
-                JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-                Logger.debug("Trying to pick part {} with nozzle {} for {}", plannedPart, plannedNozzle, jobPlacement.placement);
-                
-                break;
-            }
-        }
-    }
-
     protected void clearStepComplete() {
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             plannedPlacement.stepComplete = false;
@@ -1117,111 +1120,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             lastConfigSavedTimeMs = System.currentTimeMillis();
         }
     }
-    
-    
-    /*
-     * TODO: This is the code extracted from original doFeedAndPick.
-     * Exactly the same procedure I need in both doFeedAndPick and new doAlign.
-     * So I did it to don't duplicate the code and get better transparency in 
-     * doFeedAndPick and in new doAlign.
-     */
-    private void subFeedAndPick(PlannedPlacement plannedPlacement) throws Exception{
-    		Nozzle nozzle = plannedPlacement.nozzle;
-    		JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-    		Placement placement = jobPlacement.placement;
-    		Part part = placement.getPart();
-
-    		if (!plannedPlacement.fed) {
-    			Exception lastError = null;
-    			Feeder lastErrorFeeder = null;
-    			while (true) {
-                   // Find a compatible, enabled feeder
-                   Feeder feeder;
-                   try {
-                       feeder = findFeeder(machine, part);
-                   }
-                   catch (Exception e) {
-                       if (lastError != null) {
-                           throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
-                                   part.getId(), 
-                                   lastErrorFeeder.getName(), 
-                                   lastError.getMessage()), 
-                                   lastError);
-                       }
-                       else {
-                           throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
-                       }
-                   }
-                   plannedPlacement.feeder = feeder;
-
-                   // Feed the part
-                   try {
-                       // Try to feed the part. If it fails, retry the specified number of times
-                       // before giving up.
-                       retry(1 + feeder.getRetryCount(), () -> {
-                           fireTextStatus("Feeding %s from %s for %s.", part.getId(),
-                                   feeder.getName(), placement.getId());
-                                   Logger.debug("Attempt Feed {} from {} with {}.",
-                                   new Object[] {part, feeder, nozzle});
-
-                           feeder.feed(nozzle);
-
-                           Logger.debug("Fed {} from {} with {}.",
-                                   new Object[] {part, feeder, nozzle});
-                       });
-                       break;
-                   }
-                   catch (Exception e) {
-                       Logger.debug("Feed {} from {} with {} failed!",
-                               new Object[] {part.getId(), feeder, nozzle});
-                       // If the feed fails, disable the feeder and continue. If there are no
-                       // more valid feeders the findFeeder() call above will throw and exit the
-                       // loop.
-                       feeder.setEnabled(false);
-                       lastErrorFeeder = feeder;
-                       lastError = e;
-                   }
-               }
-               //plannedPlacement.fed = true; 	//we don't set it here after feed to can feed again in case of 
-    											//"Pick the Part" failed and doFeedAndPick repeated.
-    											//or we can set it here and then set "false" at the next step.
-           }
-
-           // Pick the part
-               while (true) {
-            	 //plannedPlacement.fed = false;
-            	   
-                   // Get the feeder that was used to feed
-                   Feeder feeder = plannedPlacement.feeder; 
-               	
-                   retry(1+feeder.getPickRetryCount(), () -> {
-                       fireTextStatus("Picking %s from %s for %s.", part.getId(),
-                               feeder.getName(), placement.getId());
-                       Logger.debug("Attempt Pick {} from {} with {}.",
-                               new Object[] {part, feeder, nozzle});
-
-                       // Move to the pick location
-                       MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());                                    
-                                   
-                       // Pick
-                       nozzle.pick(part);
-
-                       // Retract
-                       nozzle.moveToSafeZ();
-                       Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
-                       //plannedPlacement.fed = true;
-                       
-                       // feed after pick
-                       if (feeder != null) {
-                       feeder.postPick(nozzle);
-                       }
-                       
-                   });
-                   break;
-               }
-               plannedPlacement.fed = true;
-      }
-
     
     @Root
     public static class StandardPnpJobPlanner implements PnpJobPlanner {

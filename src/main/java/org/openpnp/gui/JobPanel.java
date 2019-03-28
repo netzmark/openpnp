@@ -945,12 +945,8 @@ public class JobPanel extends JPanel {
             String retryOption = "Try Again"; //$NON-NLS-1$
             String skipOption = "Skip"; //$NON-NLS-1$
             String ignoreContinueOption = "Ignore and Continue"; //$NON-NLS-1$
-            String pickAgainOption = "Pick Again"; //$NON-NLS-1$ //added
             String pauseOption = "Pause Job"; //$NON-NLS-1$
 
-            if (jobProcessor.canPickAgain()) { //added
-                options.add(pickAgainOption);
-            }
             options.add(retryOption);
             if (jobProcessor.canSkip()) {
                 options.add(skipOption);
@@ -962,7 +958,7 @@ public class JobPanel extends JPanel {
 
             int result = JOptionPane.showOptionDialog(getTopLevelAncestor(), t.getMessage(),
                     "Job Error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, //$NON-NLS-1$
-                    options.toArray(), pickAgainOption);
+                    options.toArray(), retryOption);
             String selectedOption = (result<0) ? "Pause Job" : options.get(result);
             Logger.debug("Job error {}", selectedOption);
 
@@ -985,16 +981,6 @@ public class JobPanel extends JPanel {
                     // Tell the job processor ignore error and continue as if everything were normal
                     Logger.debug("Job error dialog choose: ignore/continue");
                     jobIgnoreContinue();
-                });
-            }
-            //pick/again  //temporary not used
-            else if (selectedOption.equals(pickAgainOption)) { //added
-                UiUtils.messageBoxOnException(() -> {
-//                    if (state == State.Running) {
-//                        setState(State.Paused);
-//                    }
-                    Logger.debug("Job error dialog choose: pickAgain");
-                    jobPickAgain();
                 });
             }
             // Pause or cancel dialog
@@ -1029,17 +1015,6 @@ public class JobPanel extends JPanel {
         UiUtils.submitUiMachineTask(() -> {
             jobProcessor.ignoreContinue();
             jobRun();
-        });
-    }
-
-    public void jobPickAgain() { //temporary not used
-        UiUtils.submitUiMachineTask(() -> {
-            jobProcessor.pickAgain(); 
-            jobRun(); 
-
-            if (state == State.Paused) {
-                setState(State.Running);
-            }
         });
     }
 
