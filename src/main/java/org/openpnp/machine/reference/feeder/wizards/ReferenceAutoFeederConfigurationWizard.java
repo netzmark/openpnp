@@ -49,7 +49,7 @@ public class ReferenceAutoFeederConfigurationWizard
     private JTextField postPickActuatorValue;
     private JComboBox actuatorType;
     private JComboBox postPickActuatorType;
-    private JCheckBox chckbxDelayedFeed; //my new checkbox
+    private JCheckBox chckbxDelayedFeed;
 
     public ReferenceAutoFeederConfigurationWizard(ReferenceAutoFeeder feeder) {
         super(feeder);
@@ -66,8 +66,8 @@ public class ReferenceAutoFeederConfigurationWizard
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC, //added
-                FormSpecs.DEFAULT_COLSPEC, //added
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -77,10 +77,10 @@ public class ReferenceAutoFeederConfigurationWizard
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,//added
-                FormSpecs.DEFAULT_ROWSPEC,//added
-                FormSpecs.RELATED_GAP_ROWSPEC,//added
-                FormSpecs.DEFAULT_ROWSPEC,//added
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -96,13 +96,13 @@ public class ReferenceAutoFeederConfigurationWizard
         JLabel lblFeed = new JLabel("Feed");
         panelActuator.add(lblFeed, "2, 4, right, default");
         
-        chckbxDelayedFeed = new JCheckBox("");			//my new checkbox
+        chckbxDelayedFeed = new JCheckBox("");
         panelActuator.add(chckbxDelayedFeed, "2, 10, right, default");
         
-        JLabel lblDelayedFeed = new JLabel("Feed at the pick location");	//my new checkbox
+        JLabel lblDelayedFeed = new JLabel("Feed at the pick location");
         panelActuator.add(lblDelayedFeed, "4, 10, left, default"); 
         
-        JLabel lblInfo = new JLabel("(multi-click mechanical feeders)");	//my new checkbox
+        JLabel lblInfo = new JLabel("(multi-click mechanical feeders)");
         panelActuator.add(lblInfo, "6, 10, left, default"); 
         
         actuatorName = new JTextField();

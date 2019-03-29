@@ -56,7 +56,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     @Attribute(required=false)
     protected double postPickActuatorValue;
     
-    @Attribute(required = false)
+    @Attribute(required=false)
     private boolean delayedFeedEnabled = false;
 
     @Override

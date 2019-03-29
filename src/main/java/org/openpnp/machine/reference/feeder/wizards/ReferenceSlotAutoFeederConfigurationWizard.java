@@ -26,6 +26,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -99,6 +100,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -343,8 +348,6 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         whateverPanel.add(retryCountTf, "4, 8");
         retryCountTf.setColumns(10);
         
-// Added auto pick retry GUI stuff - //bert
-        
         JLabel lblAlignRetryCount = new JLabel("Align Retry Count");
         whateverPanel.add(lblAlignRetryCount, "6, 8, right, default");
 
@@ -358,12 +361,20 @@ public class ReferenceSlotAutoFeederConfigurationWizard
 
         pickRetryCountTf = new JTextField();
         pickRetryCountTf.setText("3");
-        whateverPanel.add(pickRetryCountTf, "12, 8, fill, default");
-        pickRetryCountTf.setColumns(2);
+        whateverPanel.add(pickRetryCountTf, "12, 8, left, default");
+        pickRetryCountTf.setColumns(10);
         
-               
-        // done adding - Bert
+        chckbxAutoSkipA = new JCheckBox("");
+        whateverPanel.add(chckbxAutoSkipA, "10, 14, right, default");
         
+        JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
+        whateverPanel.add(lblAutoSkipA, "12, 14, left, default"); 
+        
+        chckbxAutoSkipP = new JCheckBox("");
+        whateverPanel.add(chckbxAutoSkipP, "10, 12, right, default");
+        
+        JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
+        whateverPanel.add(lblAutoSkipP, "12, 12, left, default"); 
         
         bankNameTf = new JTextField();
         whateverPanel.add(bankNameTf, "8, 10, 3, 1");
@@ -403,8 +414,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         
         
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
+        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
 
         /**
          * Note that we set up the bindings here differently than everywhere else. In most
@@ -478,8 +489,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(rotOffsetTf);
         
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-        ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf); //bert
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf); //bert
+        ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf);
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf);
+        addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
+        addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");        
         
         feederPartCb.addActionListener(e -> {
             notifyChange();
@@ -542,8 +555,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private JTextField zPickLocTf;
     private JTextField rotPickLocTf;
     private JTextField retryCountTf;
-    private JTextField alignRetryCountTf; //bert
-    private JTextField pickRetryCountTf; //bert
+    private JTextField alignRetryCountTf;
+    private JTextField pickRetryCountTf;
+    private JCheckBox chckbxAutoSkipA;
+    private JCheckBox chckbxAutoSkipP;
     private LocationButtonsPanel offsetLocButtons;
     private LocationButtonsPanel pickLocButtons;
 }

@@ -82,4 +82,9 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public int getAlignRetryCount();
     
     public int getPickRetryCount();
+    
+    public boolean getAutoSkipA();
+    
+    public boolean getAutoSkipP();
+    
 }

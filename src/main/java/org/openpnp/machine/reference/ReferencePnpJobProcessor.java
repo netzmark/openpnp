@@ -1278,3 +1278,5 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
 }
+//getAutoSkipP();
+//getAutoSkipA();

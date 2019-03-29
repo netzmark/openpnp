@@ -29,11 +29,17 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     protected int retryCount = 3;
     
     @Attribute(required=false)    
-    protected int alignRetryCount = 1;
+    protected int alignRetryCount = 0;
     
     @Attribute(required=false)    
-    protected int pickRetryCount = 2;
-
+    protected int pickRetryCount = 0;
+    
+    @Attribute(required=false)    
+    protected boolean autoSkipA = false;
+    
+    @Attribute(required=false)    
+    protected boolean autoSkipP = false;
+    
     protected Part part;
 
     public AbstractFeeder() {
@@ -114,7 +120,22 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         this.pickRetryCount = pickRetryCount;
     }
     
-
+    public boolean getAutoSkipA() {
+        return autoSkipA;
+    }
+    
+    public void setAutoSkipA(boolean autoSkipA) {
+        this.autoSkipA = autoSkipA;
+    }
+    
+    public boolean getAutoSkipP() {
+        return autoSkipP;
+    }
+    
+    public void setAutoSkipP(boolean autoSkipP) {
+        this.autoSkipP = autoSkipP;
+    }
+    
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};

@@ -123,10 +123,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblPart;
     private JLabel lblRetryCount;
     private JTextField retryCountTf;
-    private JLabel lblAlignRetryCount; //bert
-    private JTextField alignRetryCountTf; //bert
-    private JLabel lblPickRetryCount; //bert
-    private JTextField pickRetryCountTf; //bert
+    private JLabel lblAlignRetryCount;
+    private JTextField alignRetryCountTf;
+    private JLabel lblPickRetryCount;
+    private JTextField pickRetryCountTf;
+    private JCheckBox chckbxAutoSkipA;
+    private JCheckBox chckbxAutoSkipP;
     
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -147,6 +149,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,                    
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,                        
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -181,8 +185,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(retryCountTf, "4, 6, fill, default");
         retryCountTf.setColumns(20);
         
-        // Added auto pick retry GUI stuff - //bert
-        
         lblAlignRetryCount = new JLabel("Align Retry Count");
         panelPart.add(lblAlignRetryCount, "6, 4, right, default");
 
@@ -198,9 +200,18 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         pickRetryCountTf.setText("3");
         panelPart.add(pickRetryCountTf, "8, 6, fill, default");
         pickRetryCountTf.setColumns(20);
-        
                
-        // done adding - Bert
+        chckbxAutoSkipA = new JCheckBox("");
+        panelPart.add(chckbxAutoSkipA, "10, 4, right, default");
+        
+        JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
+        panelPart.add(lblAutoSkipA, "12, 4, left, default"); 
+        
+        chckbxAutoSkipP = new JCheckBox("");
+        panelPart.add(chckbxAutoSkipP, "10, 6, right, default");
+        
+        JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
+        panelPart.add(lblAutoSkipP, "12, 6, left, default"); 
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
@@ -371,9 +382,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
-        
+        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
+        addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");              
         addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);

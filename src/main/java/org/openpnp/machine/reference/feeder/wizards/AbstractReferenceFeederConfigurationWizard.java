@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.Color;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -70,8 +71,10 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     private JComboBox comboBoxPart;
     private LocationButtonsPanel locationButtonsPanel;
     private JTextField retryCountTf;
-    private JTextField alignRetryCountTf; //bert
-    private JTextField pickRetryCountTf; //bert
+    private JTextField alignRetryCountTf;
+    private JTextField pickRetryCountTf;
+    private JCheckBox chckbxAutoSkipA;
+    private JCheckBox chckbxAutoSkipP;
 
     /**
      * @wbp.parser.constructor
@@ -90,6 +93,8 @@ public abstract class AbstractReferenceFeederConfigurationWizard
                 new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -128,8 +133,6 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         panelPart.add(retryCountTf, "4, 4");
         retryCountTf.setColumns(3);
         
-// Added auto pick retry GUI stuff - //bert
-        
         JLabel lblAlignRetryCount = new JLabel("Align Retry Count");
         panelPart.add(lblAlignRetryCount, "6, 2, right, default");
 
@@ -146,9 +149,18 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         panelPart.add(pickRetryCountTf, "8, 4, fill, default");
         pickRetryCountTf.setColumns(20);
         
-               
-        // done adding - Bert
-
+        chckbxAutoSkipA = new JCheckBox("");
+        panelPart.add(chckbxAutoSkipA, "10, 2, right, default");
+        
+        JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
+        panelPart.add(lblAutoSkipA, "12, 2, left, default"); 
+        
+        chckbxAutoSkipP = new JCheckBox("");
+        panelPart.add(chckbxAutoSkipP, "10, 4, right, default");
+        
+        JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
+        panelPart.add(lblAutoSkipP, "12, 4, left, default"); 
+        
         if (includePickLocation) {
             panelLocation = new JPanel();
             panelLocation.setBorder(new TitledBorder(
@@ -213,9 +225,11 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
-
+        addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
+        addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");        
+        
         if (includePickLocation) {
             MutableLocationProxy location = new MutableLocationProxy();
             bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
@@ -230,7 +244,8 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         }
 
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-        ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf); //bert
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf); //bert
+        ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf);
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf);
+        
     }
 }

@@ -35,6 +35,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -100,10 +101,12 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private LocationButtonsPanel locationButtonsPanel;
 	private LocationButtonsPanel lastLocationButtonsPanel;
 	private JTextField retryCountTf;
-	private JLabel lblAlignRetryCount; //bert
-    private JTextField alignRetryCountTf; //bert
-    private JLabel lblPickRetryCount; //bert
-    private JTextField pickRetryCountTf; //bert
+	private JLabel lblAlignRetryCount;
+    private JTextField alignRetryCountTf;
+    private JLabel lblPickRetryCount;
+    private JTextField pickRetryCountTf;
+    private JCheckBox chckbxAutoSkipA;
+    private JCheckBox chckbxAutoSkipP;
 
 	/**
 	 * @wbp.parser.constructor
@@ -125,6 +128,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		panelPart.setLayout(new FormLayout(
 				new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
 						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, 
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
 						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
 						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
 						FormSpecs.RELATED_GAP_COLSPEC,
@@ -164,8 +168,6 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		panelPart.add(retryCountTf, "4, 4");
 		retryCountTf.setColumns(3);
 		
-// Added auto pick retry GUI stuff - //bert
-        
         lblAlignRetryCount = new JLabel("Align Retry Count");
         panelPart.add(lblAlignRetryCount, "6, 2, right, default");
 
@@ -181,10 +183,19 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
         pickRetryCountTf.setText("3");
         panelPart.add(pickRetryCountTf, "8, 4, fill, default");
         pickRetryCountTf.setColumns(20);
-        
-               
-        // done adding - Bert
 
+        chckbxAutoSkipA = new JCheckBox("");
+        panelPart.add(chckbxAutoSkipA, "10, 2, left, default");
+        
+        JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
+        panelPart.add(lblAutoSkipA, "12, 2, left, default"); 
+        
+        chckbxAutoSkipP = new JCheckBox("");
+        panelPart.add(chckbxAutoSkipP, "10, 4, left, default");
+        
+        JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
+        panelPart.add(lblAutoSkipP, "12, 4, left, default"); 
+        
 		if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
@@ -424,10 +435,12 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 		addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
-		addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter); //bert
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //bert
+		addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
+        addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
+        addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");
 
-		if (includePickLocation) {
+        if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();
 			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
 			addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
