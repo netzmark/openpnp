@@ -55,17 +55,34 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     
     @Attribute(required=false)
     protected double postPickActuatorValue;
+    
+    @Attribute(required = false)
+    private boolean delayedFeedEnabled = false;
 
     @Override
     public Location getPickLocation() throws Exception {
         return location;
     }
 
+    
+    /**
+     * DelayedFeed. This simple feature was given to me by CriS. I have not 
+     * spent any minute to understand how this small code works but it works :-). 
+     * It means it actuates the Feed after the nozzle is brought to the pick location
+     * not priorly. It allows to click required number of time before the vacuum 
+     * checking. 
+     * This is for feeders which have mechanically advanced the tape.
+     * 
+     * @throws Exception
+     */
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         if (actuatorName == null || actuatorName.equals("")) {
             Logger.warn("No actuatorName specified for feeder {}.", getName());
             return;
+        }
+        if (delayedFeedEnabled) {
+        	nozzle.moveTo(location.derive(null,null,0.,null));
         }
         Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
         if (actuator == null) {
@@ -77,9 +94,12 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         if (actuatorType == ActuatorType.Boolean) {
             actuator.actuate(actuatorValue != 0);
         }
-        else {
-            actuator.actuate(actuatorValue);
+        else if (delayedFeedEnabled) {
+        	actuator.actuate(Double.parseDouble(nozzle.getName()));
         }
+        else {
+        	actuator.actuate(actuatorValue);
+        	}
     }
     
     @Override
@@ -118,6 +138,14 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         this.actuatorType = actuatorType;
     }
 
+    public boolean isDelayedFeedEnabled() {  //added
+        return delayedFeedEnabled;
+    }
+
+    public void setDelayedFeedEnabled(boolean delayedFeedEnabled) { //added
+        this.delayedFeedEnabled = delayedFeedEnabled;
+    }
+    
     public double getActuatorValue() {
         return actuatorValue;
     }
