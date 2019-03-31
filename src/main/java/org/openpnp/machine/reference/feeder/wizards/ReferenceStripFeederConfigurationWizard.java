@@ -211,7 +211,17 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(chckbxAutoSkipP, "10, 6, right, default");
         
         JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
-        panelPart.add(lblAutoSkipP, "12, 6, left, default"); 
+        panelPart.add(lblAutoSkipP, "12, 6, left, default");
+        
+        lblAlignRetryCount.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");
+        alignRetryCountTf.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");      
+        lblPickRetryCount.setToolTipText("The number of Picks to retry. <0> means just single Picking with no retries.");
+        pickRetryCountTf.setToolTipText("The number of Picks to retry. <0> is deafult and means single Picking with no retries.");      
+        
+        chckbxAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
 
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);

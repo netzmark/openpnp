@@ -135,15 +135,15 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         
         JLabel lblAlignRetryCount = new JLabel("Align Retry Count");
         panelPart.add(lblAlignRetryCount, "6, 2, right, default");
-
+                
         alignRetryCountTf = new JTextField();
         alignRetryCountTf.setText("2");
         panelPart.add(alignRetryCountTf, "8, 2, fill, default");
         alignRetryCountTf.setColumns(20);
-        
+                
         JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
         panelPart.add(lblPickRetryCount, "6, 4, right, default");
-
+                
         pickRetryCountTf = new JTextField();
         pickRetryCountTf.setText("3");
         panelPart.add(pickRetryCountTf, "8, 4, fill, default");
@@ -160,6 +160,16 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         
         JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
         panelPart.add(lblAutoSkipP, "12, 4, left, default"); 
+        
+        lblAlignRetryCount.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");
+        alignRetryCountTf.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");      
+        lblPickRetryCount.setToolTipText("The number of Picks to retry. <0> means just single Picking with no retries.");
+        pickRetryCountTf.setToolTipText("The number of Picks to retry. <0> is deafult and means single Picking with no retries.");      
+        
+        chckbxAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
         
         if (includePickLocation) {
             panelLocation = new JPanel();

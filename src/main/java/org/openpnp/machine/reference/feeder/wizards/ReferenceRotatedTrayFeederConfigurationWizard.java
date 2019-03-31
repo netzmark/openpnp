@@ -102,11 +102,11 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private LocationButtonsPanel lastLocationButtonsPanel;
 	private JTextField retryCountTf;
 	private JLabel lblAlignRetryCount;
-    private JTextField alignRetryCountTf;
-    private JLabel lblPickRetryCount;
-    private JTextField pickRetryCountTf;
-    private JCheckBox chckbxAutoSkipA;
-    private JCheckBox chckbxAutoSkipP;
+	private JTextField alignRetryCountTf;
+	private JLabel lblPickRetryCount;
+	private JTextField pickRetryCountTf;
+	private JCheckBox chckbxAutoSkipA;
+	private JCheckBox chckbxAutoSkipP;
 
 	/**
 	 * @wbp.parser.constructor
@@ -168,35 +168,45 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		panelPart.add(retryCountTf, "4, 4");
 		retryCountTf.setColumns(3);
 		
-        lblAlignRetryCount = new JLabel("Align Retry Count");
-        panelPart.add(lblAlignRetryCount, "6, 2, right, default");
+		lblAlignRetryCount = new JLabel("Align Retry Count");
+		panelPart.add(lblAlignRetryCount, "6, 2, right, default");
 
-        alignRetryCountTf = new JTextField();
-        alignRetryCountTf.setText("2");
-        panelPart.add(alignRetryCountTf, "8, 2, fill, default");
-        alignRetryCountTf.setColumns(20);
+		alignRetryCountTf = new JTextField();
+		alignRetryCountTf.setText("2");
+		panelPart.add(alignRetryCountTf, "8, 2, fill, default");
+		alignRetryCountTf.setColumns(20);
         
-        lblPickRetryCount = new JLabel("Pick Retry Count");
-        panelPart.add(lblPickRetryCount, "6, 4, right, default");
+		lblPickRetryCount = new JLabel("Pick Retry Count");
+		panelPart.add(lblPickRetryCount, "6, 4, right, default");
 
-        pickRetryCountTf = new JTextField();
-        pickRetryCountTf.setText("3");
-        panelPart.add(pickRetryCountTf, "8, 4, fill, default");
-        pickRetryCountTf.setColumns(20);
+		pickRetryCountTf = new JTextField();
+		pickRetryCountTf.setText("3");
+		panelPart.add(pickRetryCountTf, "8, 4, fill, default");
+		pickRetryCountTf.setColumns(20);
 
-        chckbxAutoSkipA = new JCheckBox("");
-        panelPart.add(chckbxAutoSkipA, "10, 2, left, default");
+		chckbxAutoSkipA = new JCheckBox("");
+		panelPart.add(chckbxAutoSkipA, "10, 2, left, default");
         
-        JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
-        panelPart.add(lblAutoSkipA, "12, 2, left, default"); 
+		JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
+		panelPart.add(lblAutoSkipA, "12, 2, left, default"); 
         
-        chckbxAutoSkipP = new JCheckBox("");
-        panelPart.add(chckbxAutoSkipP, "10, 4, left, default");
+		chckbxAutoSkipP = new JCheckBox("");
+		panelPart.add(chckbxAutoSkipP, "10, 4, left, default");
         
-        JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
-        panelPart.add(lblAutoSkipP, "12, 4, left, default"); 
+		JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
+		panelPart.add(lblAutoSkipP, "12, 4, left, default");
+		
+        lblAlignRetryCount.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");
+        alignRetryCountTf.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");      
+        lblPickRetryCount.setToolTipText("The number of Picks to retry. <0> means just single Picking with no retries.");
+        pickRetryCountTf.setToolTipText("The number of Picks to retry. <0> is deafult and means single Picking with no retries.");      
         
-		if (includePickLocation) {
+        chckbxAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
+        
+        if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
 					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -436,9 +446,9 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
 		addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
 		addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
-        addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");
+		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
+		addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
+		addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");
 
         if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();
@@ -485,8 +495,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);
 		ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTrayRotation);
 		ComponentDecorators.decorateWithAutoSelect(retryCountTf);
-		ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf); //bert
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf); //bert
+		ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf);
+		ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountRows);
 		ComponentDecorators.decorateWithAutoSelect(textFieldTrayCountCols);
 		ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);

@@ -85,16 +85,19 @@ import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.TextStatusListener;
+import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+//import org.openpnp.spi.Feeder; //added
 
 import org.pmw.tinylog.Logger;
 
@@ -364,6 +367,47 @@ public class JobPanel extends JPanel {
         JButton btnPanelizeFidCheck = new JButton(panelizeFiducialCheck);
         toolBarBoards.add(btnPanelizeFidCheck);
         btnPanelizeFidCheck.setHideActionText(true);
+        
+
+//        //added button "Move Camera To Part Pick Location with the Job's assignments"
+//        public final Action moveCameraToPickLocationJob = new AbstractAction() {
+//            {
+//                putValue(SMALL_ICON, Icons.centerCameraOnFeederJob); //icons/position-camera-on-feeder-job.svg
+//                putValue(NAME, "Move Camera To Part Pick Location with the Job's assignments");
+//                putValue(SHORT_DESCRIPTION, "Position the camera at the part's pick location with the Job's assignments.");
+//            }
+//            
+//            @Override
+//            public void actionPerformed(ActionEvent arg0) {
+//                UiUtils.submitUiMachineTask(() -> {
+//                    Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
+//                    //Part part = ReferencePnpJobProcessor.plannedPart;
+//                    JobPlacement jobPlacement;
+//                    Placement placement = jobPlacement.placement;
+//                    Part part = placement.getPart();
+//                    if (part!=null){    //we assume that if part!=null if we're in-Job process and while the vision that failed.
+//                        Logger.debug("Moving camera to the part's {} pick location", part.getId());
+//                        Feeder feeder = null;
+//                        // find a feeder to feed
+//                        for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+//                            if (f.getPart() == part && f.isEnabled()) {
+//                                feeder = f;
+//                            }
+//                        }
+//                        if (feeder == null) {
+//                            throw new Exception("No valid feeder found for " + part.getId());
+//                        }
+//                        Location pickLocation = feeder.getPickLocation();
+//                        MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
+//                    }
+//                });
+//            }
+//        };
+//        //end of added button
+
+        
+        
+        
 
         pnlBoards.add(new JScrollPane(table));
         JPanel pnlRight = new JPanel();

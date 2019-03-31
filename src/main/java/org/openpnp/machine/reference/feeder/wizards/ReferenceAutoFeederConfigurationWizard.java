@@ -99,7 +99,7 @@ public class ReferenceAutoFeederConfigurationWizard
         chckbxDelayedFeed = new JCheckBox("");
         panelActuator.add(chckbxDelayedFeed, "2, 10, right, default");
         
-        JLabel lblDelayedFeed = new JLabel("Feed at the pick location");
+        JLabel lblDelayedFeed = new JLabel("Feed Actuator at the pick location");
         panelActuator.add(lblDelayedFeed, "4, 10, left, default"); 
         
         JLabel lblInfo = new JLabel("(multi-click mechanical feeders)");
