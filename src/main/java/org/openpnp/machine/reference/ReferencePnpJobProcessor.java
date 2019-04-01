@@ -102,7 +102,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
         public boolean fed; //not used on the moment
-        public boolean disableAlignment=false;
+        public boolean disableAlignment = false;
         public boolean stepComplete;
 
         public PlannedPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
@@ -150,12 +150,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     long startTime;
     int totalPartsPlaced;
+    int totalPartsSkipped;
     
     long lastConfigSavedTimeMs = 0;
     
     int cycles = 0;
     int nozzleTipChanges = 0;
-    int totalPartsSkipped;
    
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
@@ -584,7 +584,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
 
     /*
-     * TODO: This is modified doFeedAndPick.
+     * INFO: This is modified doFeedAndPick.
      * If feeding fails it is repeated with programmable counter (Feed Retry Count) the same as 
      * it was made before.
      * But when picking fails it is also repeated now with new with new programmable counter 
@@ -609,7 +609,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     /*
-     * TODO: This is the code extracted from original doFeedAndPick.
+     * INFO: This is the code extracted from original doFeedAndPick.
      * Exactly the same procedure I need in both doFeedAndPick and new doAlign.
      * So I did it to don't duplicate the code and get better transparency in 
      * doFeedAndPick and in new doAlign.
@@ -629,7 +629,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    feeder = findFeeder(machine, part);
                }
                catch (Exception e) { 
-            	   //||if ("bypassPlacement"){
+            	   //TODO: if ("bypassPlacement"){
             	   //Logger.debug("Skipped part {}", part.getId());
             	   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
             	   //doSkip();
@@ -713,7 +713,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    	});
         		   break;
         	   }
-        	   catch (Exception e) { //SPRAWDZIC tego catcha czy dziala prawidlowo.
+        	   catch (Exception e) { //TODO: SPRAWDZIC tego catcha czy dziala prawidlowo.
             	   if (feeder.getAutoSkipP()) { 
               		   Logger.debug("Skipped part {}", part.getId());
             		   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
@@ -730,7 +730,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	//boolean dontAlign=false;	//we need condition to don't do Aligning after the part was not picked
 								//during ordered pickAgain in doAlign, but just pick it again immediately.
 	/*
-	 * TODO: This is modified doAlign.
+	 * INFO: This is modified doAlign.
 	 * Now if alignment fails due to lost or wrong picked part, the part is discarded and tried to 
 	 * subFeedAndPick pick again and then Aligned again with programmable counter (Align Retry Count).
 	 * (In the section above see description how operates new modified doPickAndFeed).
@@ -808,7 +808,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             		else if(alignCount>0){
                   	   if (feeder.getAutoSkipA()) { 
                   		   Logger.debug("Skipped part {}", part.getId());
-                  		   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+                  		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
                   		   doSkip();
                     	   }
             			//plannedPlacement.disableAlignment = true;	//if this is commented: after when the f dialog message is 
