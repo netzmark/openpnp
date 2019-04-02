@@ -151,6 +151,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     long startTime;
     int totalPartsPlaced;
     int totalPartsSkipped;
+	boolean skipP;
+	boolean skipA;
     
     long lastConfigSavedTimeMs = 0;
     
@@ -218,8 +220,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fsm.send(Message.Next);
         } 
         catch (Exception e) {
-            this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
-            throw(e);
+            if(skipP || skipA) {
+            	doSkip();
+            }
+            else {
+            	this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
+            	throw(e);
+            }
         }
 
         if (fsm.getState() == State.Stopped) {
@@ -683,8 +690,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	}
 
         	// Pick the part
-        	while (true) {
-     		   Feeder feeder = plannedPlacement.feeder; 
+        	//while (true) {
+     		   Feeder feeder = plannedPlacement.feeder;
         	   try {
         		   // Get the feeder that was used to feed
         		   retry(1+feeder.getPickRetryCount(), () -> {
@@ -710,24 +717,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         				   feeder.postPick(nozzle);
         			   }
                    	});
-        		   break;
+        		   //break;
         	   }
-        	   catch (Exception e) { //TODO: SPRAWDZIC tego catcha czy dziala prawidlowo.
+        	   catch (Exception e) {
             	   if (feeder.getAutoSkipP()) { 
-              		   Logger.debug("Skipped part {}", part.getId());
-            		   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-            		   doSkip();
+            		   skipP=true;
+            		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
             	   }
             	   throw (e);
         	   }
-        	}
        }
+    
+    
     //TODO: feeder.isEnabled() ; feeder.setEnabled(false);
     		//isAutoSaveJob()
     		//isAutoSaveConfiguration()
+
     
-	//boolean dontAlign=false;	//we need condition to don't do Aligning after the part was not picked
-								//during ordered pickAgain in doAlign, but just pick it again immediately.
 	/*
 	 * INFO: This is modified doAlign.
 	 * Now if alignment fails due to lost or wrong picked part, the part is discarded and tried to 
@@ -805,12 +811,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             			plannedPlacement.disableAlignment=false;	//picking was succeeded so we need to align the part.
             		}
             		else if(alignCount>0){
-                  	   if (feeder.getAutoSkipA()) { 
-                  		   Logger.debug("Skipped part {}", part.getId());
-                  		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-                  		   doSkip();
-                    	   }
-            			//plannedPlacement.disableAlignment = true;	//if this is commented: after when the f dialog message is 
+
+            			if (feeder.getAutoSkipA()) { 
+                		   skipP=true;
+                		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+                	   }   
+                  	   
+                  	   //plannedPlacement.disableAlignment = true;	//if this is commented: after when the f dialog message is 
                   	   												//thrown, user may manually correct the part on nozzle and 
                   	   												//choose <Try Again>. The part will be tried to be aligned 
                   	   												//before trying to discard and pick the new part.
@@ -1024,12 +1031,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
                 // discard
                 Nozzle nozzle = plannedPlacement.nozzle;
-                fireTextStatus("Discarding part from nozzle: %s.",  nozzle.getName());
+                fireTextStatus("Discarding skipped part from nozzle: %s.",  nozzle.getName());
                 discard(nozzle);
 
                 jobPlacement.status = Status.Skipped;
                 Logger.debug("Skipped {}", jobPlacement.placement);
                 ++totalPartsSkipped;
+                skipP=false;
+                skipA=false;
 
                 // stop iterating through plannedPlacements, since only one part is handled at a time
                 break;
