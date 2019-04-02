@@ -646,9 +646,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    }
                }
                
-               //plannedPlacement.feeder = feeder;
-
                // Feed the part
+               plannedPlacement.feeder = feeder;
                try {
                    // Try to feed the part. If it fails, retry the specified number of times
                    // before giving up.
