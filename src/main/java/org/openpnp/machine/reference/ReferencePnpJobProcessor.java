@@ -646,12 +646,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    feeder = findFeeder(machine, part);
                }
                catch (Exception e) { 
-            	   								//TODO: 
                    	if (lastError != null) { 	
-                   		//if (feeder.getAutoSkipP()) {makeSkip=true;}
-                   		//if (feeder.getAutoSkipP() &&"!DisableAutomatics" &&"autoDisableFeeder") {feeder.setEnabled(false);} 
-                   		//run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-                       throw new Exception(String.format("Unable #1 to feed %s. Feeder %s: %s.", 
+                   		throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
                                part.getId(), 
                                lastErrorFeeder.getName(), 
                                lastError.getMessage()), 
@@ -660,18 +656,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    else { 						
                 	   if (isAutoSkipDisabledFeeders()) { //||
                 		   makeSkip=true; 
+                		 //TODO: run script to inform the problem has happened.
                 	   }
-                	   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-                	   throw new Exception(String.format("Unable #2 to feed %s. No enabled feeder found.", part.getId()));
+                	   throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
                    }
                }
-               
-               
-               //isDisableAutomatics()
-               //isAutoSkipDisabledFeeders()
-               //isAutoDisableFeeder()
-               
-               
                
                // Feed the part
                plannedPlacement.feeder = feeder;
@@ -695,10 +684,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                catch (Exception e) {
                    Logger.debug("Feed {} from {} with {} failed!",
                            new Object[] {part.getId(), feeder, nozzle});
-//            	   if (feeder.getAutoSkipP()){ //||
-//                       makeSkip=true;
-//                       //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-//                	   } 
+            	   if (feeder.getAutoSkipP()){ //||
+                       makeSkip=true;
+                       //TODO: run script to inform the problem has happened.
+                	   } 
             	   
                    // If the feed fails, disable the feeder and continue. If there are no
                    // more valid feeders the findFeeder() call above will throw and exit the
@@ -710,7 +699,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	}
 
         	// Pick the part
-        	//while (true) {
      		   Feeder feeder = plannedPlacement.feeder;
         	   try {
         		   // Get the feeder that was used to feed
@@ -737,15 +725,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         				   feeder.postPick(nozzle);
         			   }
                    	});
-        		   //break;
         	   }
         	   catch (Exception e) {
             	   if (feeder.getAutoSkipP()) { 
             		   makeSkip=true; //||
-            		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+            		   //TODO: run script to inform the problem has happened.
             		   if (isAutoDisableFeeder() && !isDisableAutomatics()) { //||
             			   feeder.setEnabled(false);
-                		   //TODO: run script to display message "something was disabled"
+                		   //TODO: run script to inform the problem has happened.
             		   }
             	   	} 
             	   throw (e);
@@ -782,14 +769,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 																	//changed feeder's settings to 0 during the doAlign repetitions 
 																	//performing and then bottom vision is skipped. Low chance for
 																	//occurrence but who knows..., better to be protected.
-            		//dontAlign=false;	
             		plannedPlacement.disableAlignment=false;
             	}
             	try {
             		if(partAlignment!=null) {
             			if (plannedPlacement.disableAlignment) {	//avoid useless aligning if pressed "try again" after the
             														//picking was failed and there must be no part on the nozzle.
-            			//if(dontAlign==true) { 		 
+
             				throw new Exception(); 					//we need exception to not align but go to catch and start 
             														//next part picking.
             			}
@@ -815,7 +801,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             			fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
             			discard(nozzle);
             			
-            			//dontAlign = true;
             			plannedPlacement.disableAlignment=true;		//protection: if picking-again during doAlign will fail and
             														//user chooses <try again> - it will reinitialize doAlign(),
             														//so we don't need to perform Aligning on empty nozzle but 
@@ -824,18 +809,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         fireTextStatus("Picking again %s from %s for %s.", part.getId(),
                                 feeder.getName(), placement.getId());
             			subFeedAndPick(plannedPlacement);
-            			
-            			//dontAlign = false;
             			plannedPlacement.disableAlignment=false;	//picking was succeeded so we need to align the part.
             		}
             		else if(alignCount>0){
-
                   	   if (feeder.getAutoSkipA()) {
                  		   makeSkip=true; //||
-                 		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+                 		   //TODO: run script to inform the problem has happened.
                  		   if (isAutoDisableFeeder() && !isDisableAutomatics()) { //||
                  			   feeder.setEnabled(false);
-                     		   //TODO: run script to display message "something was disabled"
+                 			   //TODO: run script to inform the problem has happened.
                  		   }                  		   
                   	   }
                   	   
@@ -855,10 +837,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             		}
                 }
             }
-            
             plannedPlacement.stepComplete = true;
         }
-
         clearStepComplete();
     }
 
