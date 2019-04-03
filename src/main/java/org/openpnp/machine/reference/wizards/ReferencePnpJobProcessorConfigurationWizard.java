@@ -43,6 +43,9 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JComboBox comboBoxJobOrder;
     private JCheckBox checkBoxAutoSaveJobAfterPlacement;
     private JCheckBox checkBoxAutoSaveConfiguration;
+    private JCheckBox checkBoxDisableAutomatics;
+    private JCheckBox checkBoxAutoSkipDisabledFeeders;
+    private JCheckBox checkBoxAutoDisableFeeder;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -60,6 +63,14 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.DEFAULT_COLSPEC,
                         },
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -93,20 +104,45 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         panelGeneral.add(checkBoxAutoSaveJobAfterPlacement, "4, 6");
         
         JLabel lblAutoSaveConfiguration = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.AutoSaveConfiguration") + " " + (jobProcessor.getConfigSaveFrequencyMs() / 1000 / 60) + " min");
-        panelGeneral.add(lblAutoSaveConfiguration, "2, 8, right, default");
+        panelGeneral.add(lblAutoSaveConfiguration, "2, 8, right, default");//
 
         checkBoxAutoSaveConfiguration = new JCheckBox("");
         panelGeneral.add(checkBoxAutoSaveConfiguration, "4, 8");
 
         JLabel lblDelayInfo = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.DelayInfo"));
         panelGeneral.add(lblDelayInfo, "4, 10, left, default");
-    }
 
+        JLabel lblDisableAutomatics = new JLabel("Disable Feeder's Automatic Skipping and Disabling");
+        panelGeneral.add(lblDisableAutomatics, "2, 16, right, default");
+        lblDisableAutomatics.setToolTipText("Global <one touch> disabling any feeder's automation.");
+        
+        checkBoxDisableAutomatics = new JCheckBox("");
+        panelGeneral.add(checkBoxDisableAutomatics, "4, 16");
+        
+        JLabel lblAutoDisableFeeder = new JLabel("Automatically Disable Feeder at it's Auto Skip");
+        panelGeneral.add(lblAutoDisableFeeder, "2, 18, right, default");
+        lblAutoDisableFeeder.setToolTipText("When Auto Skip is performed the Feeder is disabled.");
+        
+        checkBoxAutoDisableFeeder = new JCheckBox("");
+        panelGeneral.add(checkBoxAutoDisableFeeder, "4, 18");
+        
+        JLabel lblAutoSkipDisabledFeeders = new JLabel("Automatically Skip Disabled Feeders");
+        panelGeneral.add(lblAutoSkipDisabledFeeders, "2, 20, right, default");
+        lblAutoSkipDisabledFeeders.setToolTipText("Skip the placement if Feeder is disabled and Auto Skip allowed.");
+        
+        checkBoxAutoSkipDisabledFeeders = new JCheckBox("");
+        panelGeneral.add(checkBoxAutoSkipDisabledFeeders, "4, 20");
+        
+    }
+    
     @Override
     public void createBindings() {
         addWrappedBinding(jobProcessor, "parkWhenComplete", parkWhenComplete, "selected");
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
         addWrappedBinding(jobProcessor, "autoSaveJob", checkBoxAutoSaveJobAfterPlacement, "selected");
         addWrappedBinding(jobProcessor, "autoSaveConfiguration", checkBoxAutoSaveConfiguration, "selected");
+        addWrappedBinding(jobProcessor, "disableAutomatics", checkBoxDisableAutomatics, "selected");
+        addWrappedBinding(jobProcessor, "autoSkipDisabledFeeders", checkBoxAutoSkipDisabledFeeders, "selected");
+        addWrappedBinding(jobProcessor, "autoDisableFeeder", checkBoxAutoDisableFeeder, "selected");
     }
 }

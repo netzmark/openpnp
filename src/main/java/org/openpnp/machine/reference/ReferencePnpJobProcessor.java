@@ -135,6 +135,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
+    
+    @Element(required = false)
+    boolean disableAutomatics = false;
+    
+    @Element(required = false)
+    boolean autoSkipDisabledFeeders = false;
+    
+    @Element(required = false)
+    boolean autoDisableFeeder = false;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -151,8 +160,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     long startTime;
     int totalPartsPlaced;
     int totalPartsSkipped;
-	boolean skipP;
-	boolean skipA;
+	boolean makeSkip; //||
+	//boolean skipA;
     
     long lastConfigSavedTimeMs = 0;
     
@@ -220,10 +229,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fsm.send(Message.Next);
         } 
         catch (Exception e) {
-            if(skipP || skipA) {
+            if(makeSkip && !isDisableAutomatics()) {//||
             	doSkip();
             }
             else {
+            	makeSkip=false;//||
             	this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
             	throw(e);
             }
@@ -636,22 +646,32 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    feeder = findFeeder(machine, part);
                }
                catch (Exception e) { 
-            	   //TODO: if ("bypassPlacement"){
-            	   //Logger.debug("Skipped part {}", part.getId());
-            	   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-            	   //doSkip();
-            	   //}
-                   	if (lastError != null) {
-                       throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+            	   								//TODO: 
+                   	if (lastError != null) { 	
+                   		//if (feeder.getAutoSkipP()) {makeSkip=true;}
+                   		//if (feeder.getAutoSkipP() &&"!DisableAutomatics" &&"autoDisableFeeder") {feeder.setEnabled(false);} 
+                   		//run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+                       throw new Exception(String.format("Unable #1 to feed %s. Feeder %s: %s.", 
                                part.getId(), 
                                lastErrorFeeder.getName(), 
                                lastError.getMessage()), 
                                lastError);
-                   }
-                   else {
-                       throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
+                   }							
+                   else { 						
+                	   if (isAutoSkipDisabledFeeders()) { //||
+                		   makeSkip=true; 
+                	   }
+                	   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+                	   throw new Exception(String.format("Unable #2 to feed %s. No enabled feeder found.", part.getId()));
                    }
                }
+               
+               
+               //isDisableAutomatics()
+               //isAutoSkipDisabledFeeders()
+               //isAutoDisableFeeder()
+               
+               
                
                // Feed the part
                plannedPlacement.feeder = feeder;
@@ -675,15 +695,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                catch (Exception e) {
                    Logger.debug("Feed {} from {} with {} failed!",
                            new Object[] {part.getId(), feeder, nozzle});
+//            	   if (feeder.getAutoSkipP()){ //||
+//                       makeSkip=true;
+//                       //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+//                	   } 
+            	   
                    // If the feed fails, disable the feeder and continue. If there are no
                    // more valid feeders the findFeeder() call above will throw and exit the
                    // loop.
                    feeder.setEnabled(false);
-            	   //||if ("feeder.getAutoSkipP()"){
-                   //Logger.debug("Skipped part {}", part.getId());
-            	   //run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-            	   //doSkip();
-            	   //}
                    lastErrorFeeder = feeder;
                    lastError = e;
                }
@@ -721,18 +741,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	   }
         	   catch (Exception e) {
             	   if (feeder.getAutoSkipP()) { 
-            		   skipP=true;
+            		   makeSkip=true; //||
             		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-            	   }
+            		   if (isAutoDisableFeeder() && !isDisableAutomatics()) { //||
+            			   feeder.setEnabled(false);
+                		   //TODO: run script to display message "something was disabled"
+            		   }
+            	   	} 
             	   throw (e);
         	   }
        }
-    
-    
-    //TODO: feeder.isEnabled() ; feeder.setEnabled(false);
-    		//isAutoSaveJob()
-    		//isAutoSaveConfiguration()
-
     
 	/*
 	 * INFO: This is modified doAlign.
@@ -812,10 +830,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             		}
             		else if(alignCount>0){
 
-            			if (feeder.getAutoSkipA()) { 
-                		   skipP=true;
-                		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
-                	   }   
+                  	   if (feeder.getAutoSkipA()) {
+                 		   makeSkip=true; //||
+                 		   //TODO: run script to display message "something was skipped and need refill", maybe to run some buzzer, light, just actuator, whatever.
+                 		   if (isAutoDisableFeeder() && !isDisableAutomatics()) { //||
+                 			   feeder.setEnabled(false);
+                     		   //TODO: run script to display message "something was disabled"
+                 		   }                  		   
+                  	   }
                   	   
                   	   //plannedPlacement.disableAlignment = true;	//if this is commented: after when the f dialog message is 
                   	   												//thrown, user may manually correct the part on nozzle and 
@@ -1037,8 +1059,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 jobPlacement.status = Status.Skipped;
                 Logger.debug("Skipped {}", jobPlacement.placement);
                 ++totalPartsSkipped;
-                skipP=false;
-                skipA=false;
+                makeSkip=false;//||
 
                 // stop iterating through plannedPlacements, since only one part is handled at a time
                 break;
@@ -1116,6 +1137,31 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public void setAutoSaveConfiguration(boolean autoSaveConfiguration) {
         this.autoSaveConfiguration = autoSaveConfiguration;
     }
+    
+    public boolean isDisableAutomatics() {
+        return disableAutomatics;
+    }
+
+    public void setDisableAutomatics(boolean disableAutomatics) {
+        this.disableAutomatics = disableAutomatics;
+    }  
+    
+    public boolean isAutoSkipDisabledFeeders() {
+        return autoSkipDisabledFeeders;
+    }
+
+    public void setAutoSkipDisabledFeeders(boolean autoSkipDisabledFeeders) {
+        this.autoSkipDisabledFeeders = autoSkipDisabledFeeders;
+    }  
+    
+    public boolean isAutoDisableFeeder() {
+        return autoDisableFeeder;
+    }
+
+    public void setAutoDisableFeeder(boolean autoDisableFeeder) {
+        this.autoDisableFeeder = autoDisableFeeder;
+    }  
+    
 
     public long getConfigSaveFrequencyMs() {
         return configSaveFrequencyMs;

@@ -99,11 +99,9 @@ public class ReferenceAutoFeederConfigurationWizard
         chckbxDelayedFeed = new JCheckBox("");
         panelActuator.add(chckbxDelayedFeed, "2, 10, right, default");
         
-        JLabel lblDelayedFeed = new JLabel("Feed Actuator at the pick location");
+        JLabel lblDelayedFeed = new JLabel("Feed Actuator at the Pick location");
         panelActuator.add(lblDelayedFeed, "4, 10, left, default"); 
-        
-        JLabel lblInfo = new JLabel("(multi-click mechanical feeders)");
-        panelActuator.add(lblInfo, "6, 10, left, default"); 
+        lblDelayedFeed.setToolTipText("Option for Feeders using mechanical pin-actuators to advance the tape.");
         
         actuatorName = new JTextField();
         panelActuator.add(actuatorName, "4, 4");
