@@ -1053,9 +1053,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 	params.put("nozzle", nozzle);
                 	params.put("feeder", plannedPlacement.feeder);
                 	Configuration.get().getScripting().on("Job.SkipAlarm", params); 
-                							//we do inform that something was auto Skipped 
+                							//we can inform that something was auto Skipped 
                 							//and probably need to repair some feeder.
-                	++totalPartsSkipped;
+                	//++totalPartsSkipped;
                 	//jobPlacement.status = Status.Skipped; //to consider whether we want collect
                 											//only automatically skipped parts or all
                 }
@@ -1109,14 +1109,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }).collect(Collectors.toList());
     }
 
-    protected boolean isJobComplete() {
-        return getPendingJobPlacements().isEmpty();
-    }
-    
     protected List<JobPlacement> getSkippedJobPlacements() { //||
         return this.jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.status == Status.Skipped;
         }).collect(Collectors.toList());
+    }
+    
+    protected boolean isJobComplete() {
+        return getPendingJobPlacements().isEmpty();
     }
     
     @Override
