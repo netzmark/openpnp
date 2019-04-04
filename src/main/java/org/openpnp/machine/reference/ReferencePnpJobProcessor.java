@@ -101,7 +101,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public final Nozzle nozzle;
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
-        public boolean fed; //not used on the moment
+        public boolean fed; //outdated, to remove
         public boolean disableAlignment = false;
         public boolean stepComplete;
 
@@ -160,8 +160,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     long startTime;
     int totalPartsPlaced;
     int totalPartsSkipped;
-	boolean makeSkip; //||
-	//boolean skipA;
+	boolean makeSkip;
     
     long lastConfigSavedTimeMs = 0;
     
@@ -229,11 +228,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fsm.send(Message.Next);
         } 
         catch (Exception e) {
-            if(makeSkip && !isDisableAutomatics()) {//||
+            if(makeSkip && !isDisableAutomatics()) {
             	doSkip();
             }
             else {
-            	makeSkip=false;//||
+            	makeSkip=false;
             	this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
             	throw(e);
             }
@@ -248,6 +247,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return false;
         }
         else if (fsm.getState() == State.Plan && isJobComplete()) {
+            /*
+             * If we've reached this, we are near finished,
+			 * now put all automatically skipped parts back to parts ready for assembly !!!
+             */
+				int i=0;																//||
+			     for(JobPlacement job: getSkippedJobPlacements()) {
+			    	 job.status=Status.Pending;											//||
+			    	 i++; }																//||
+						if(i!=0) {														//||
+							Configuration.get().getScripting().on("Job.SkipList", null);//||
+							throw new Exception(""+i+" Parts skipped. Operator action required to finish assembling.");
+						}        	
+        	
             /*
              * If we've reached the Plan state and there are no more placements to work on the job
              * is complete. We send the Complete Message to start the cleanup process.
@@ -654,9 +666,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                                lastError);
                    }							
                    else { 						
-                	   if (isAutoSkipDisabledFeeders()) { //||
+                	   if (isAutoSkipDisabledFeeders()) {
                 		   makeSkip=true; 
-                		 //TODO: run script to inform the problem has happened.
                 	   }
                 	   throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
                    }
@@ -684,9 +695,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                catch (Exception e) {
                    Logger.debug("Feed {} from {} with {} failed!",
                            new Object[] {part.getId(), feeder, nozzle});
-            	   if (feeder.getAutoSkipP()){ //||
+            	   if (feeder.getAutoSkipP()){
                        makeSkip=true;
-                       //TODO: run script to inform the problem has happened.
                 	   } 
             	   
                    // If the feed fails, disable the feeder and continue. If there are no
@@ -709,13 +719,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         					   new Object[] {part, feeder, nozzle});
 
         			   // Move to the pick location
+        			   //Logger.debug("prePickTest");
+        			   //nozzle.prePickTest(part); //this is the future procedure to check before the pick wether the nozzle is empty
         			   MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());                                    
                                
         			   // Pick
         			   nozzle.pick(part);
 
         			   // Retract
-        			   nozzle.moveToSafeZ();
+        			   nozzle.moveToSafeZ(); //|| is this not made in Reference nozzle - to check.
         			   fireTextStatus("Picked %s from %s for %s.", part.getId(),
         					   feeder.getName(), placement.getId());
         			   Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
@@ -728,11 +740,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         	   }
         	   catch (Exception e) {
             	   if (feeder.getAutoSkipP()) { 
-            		   makeSkip=true; //||
-            		   //TODO: run script to inform the problem has happened.
-            		   if (isAutoDisableFeeder() && !isDisableAutomatics()) { //||
+            		   makeSkip=true;
+            		   if (isAutoDisableFeeder() && !isDisableAutomatics()) {
             			   feeder.setEnabled(false);
-                		   //TODO: run script to inform the problem has happened.
             		   }
             	   	} 
             	   throw (e);
@@ -811,13 +821,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             			subFeedAndPick(plannedPlacement);
             			plannedPlacement.disableAlignment=false;	//picking was succeeded so we need to align the part.
             		}
-            		else if(alignCount>0){
+            		else if(alignCount!=0){ //||
                   	   if (feeder.getAutoSkipA()) {
-                 		   makeSkip=true; //||
-                 		   //TODO: run script to inform the problem has happened.
-                 		   if (isAutoDisableFeeder() && !isDisableAutomatics()) { //||
+                 		   makeSkip=true;
+                 		   if (isAutoDisableFeeder() && !isDisableAutomatics()) {
                  			   feeder.setEnabled(false);
-                 			   //TODO: run script to inform the problem has happened.
                  		   }                  		   
                   	   }
                   	   
@@ -1035,11 +1043,27 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Nozzle nozzle = plannedPlacement.nozzle;
                 fireTextStatus("Discarding skipped part from nozzle: %s.",  nozzle.getName());
                 discard(nozzle);
-
-                jobPlacement.status = Status.Skipped;
-                Logger.debug("Skipped {}", jobPlacement.placement);
+                Logger.debug("making discard");
+                
+                if(makeSkip) {
+					Placement placement = jobPlacement.placement;
+                	Part part = placement.getPart();
+                	HashMap<String, Object> params = new HashMap<>();
+                	params.put("part", part);
+                	params.put("nozzle", nozzle);
+                	params.put("feeder", plannedPlacement.feeder);
+                	Configuration.get().getScripting().on("Job.SkipAlarm", params); 
+                							//we do inform that something was auto Skipped 
+                							//and probably need to repair some feeder.
+                	++totalPartsSkipped;
+                	//jobPlacement.status = Status.Skipped; //to consider whether we want collect
+                											//only automatically skipped parts or all
+                }
+                
                 ++totalPartsSkipped;
-                makeSkip=false;//||
+                jobPlacement.status = Status.Skipped; //||
+                Logger.debug("Skipped {}", jobPlacement.placement);
+                makeSkip=false;
 
                 // stop iterating through plannedPlacements, since only one part is handled at a time
                 break;
@@ -1087,6 +1111,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected boolean isJobComplete() {
         return getPendingJobPlacements().isEmpty();
+    }
+    
+    protected List<JobPlacement> getSkippedJobPlacements() { //||
+        return this.jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.status == Status.Skipped;
+        }).collect(Collectors.toList());
     }
     
     @Override
