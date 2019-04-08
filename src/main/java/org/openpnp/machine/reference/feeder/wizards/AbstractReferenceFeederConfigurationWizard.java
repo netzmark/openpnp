@@ -139,7 +139,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         alignRetryCountTf = new JTextField();
         alignRetryCountTf.setText("2");
         panelPart.add(alignRetryCountTf, "8, 2, fill, default");
-        alignRetryCountTf.setColumns(20);
+        alignRetryCountTf.setColumns(18);
                 
         JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
         panelPart.add(lblPickRetryCount, "6, 4, right, default");
@@ -147,7 +147,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         pickRetryCountTf = new JTextField();
         pickRetryCountTf.setText("3");
         panelPart.add(pickRetryCountTf, "8, 4, fill, default");
-        pickRetryCountTf.setColumns(20);
+        pickRetryCountTf.setColumns(18);
         
         chckbxAutoSkipA = new JCheckBox("");
         panelPart.add(chckbxAutoSkipA, "10, 2, right, default");
@@ -158,11 +158,13 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         chckbxAutoSkipP = new JCheckBox("");
         panelPart.add(chckbxAutoSkipP, "10, 4, right, default");
         
-        JLabel lblAutoSkipP = new JLabel("AutoSkip on Pick Error");
+        JLabel lblAutoSkipP = new JLabel("AutoSkip on Feed/Pick Error");
         panelPart.add(lblAutoSkipP, "12, 4, left, default"); 
         
-        lblAlignRetryCount.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");
-        alignRetryCountTf.setToolTipText("The number of Picks and Aligns to retry. <0> means just single Alignment with no retries.");      
+        lblRetryCount.setToolTipText("The number of Feeds to retry. <0> means just single Feeding with no retries.");
+        retryCountTf.setToolTipText("The number of Feeds to retry. <0> means just single Feeding with no retries.");      
+        lblAlignRetryCount.setToolTipText("The number of Aligns (with Picks) to retry. <0> means just single Alignment with no retries.");
+        alignRetryCountTf.setToolTipText("The number of Aligns (with Picks) to retry. <0> means just single Alignment with no retries.");      
         lblPickRetryCount.setToolTipText("The number of Picks to retry. <0> means just single Picking with no retries.");
         pickRetryCountTf.setToolTipText("The number of Picks to retry. <0> is deafult and means single Picking with no retries.");      
         

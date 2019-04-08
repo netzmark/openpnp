@@ -119,7 +119,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         checkBoxDisableAutomatics = new JCheckBox("");
         panelGeneral.add(checkBoxDisableAutomatics, "4, 16");
         
-        JLabel lblAutoDisableFeeder = new JLabel("Automatically Disable Feeder at it's Auto Skip");
+        JLabel lblAutoDisableFeeder = new JLabel("Automatically Disable Feeder at its Auto Skip");
         panelGeneral.add(lblAutoDisableFeeder, "2, 18, right, default");
         lblAutoDisableFeeder.setToolTipText("When Auto Skip is performed the Feeder is disabled.");
         
