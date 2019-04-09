@@ -186,7 +186,7 @@ public class CameraView extends JComponent implements CameraListener {
 
     private boolean showName = false;
     
-    private double zoom = 1d;
+    private double zoom = 5d;
     
     private boolean dragJogging = false;
     

@@ -938,7 +938,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named, Runna
         return sendCommand(command, timeoutMilliseconds);
     }
 
-    public List<String> sendCommand(String command, long timeout) throws Exception {
+    public synchronized List<String> sendCommand(String command, long timeout) throws Exception {
         List<String> responses = new ArrayList<>();
 
         // Read any responses that might be queued up so that when we wait

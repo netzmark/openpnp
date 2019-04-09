@@ -698,7 +698,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                catch (Exception e) {
                    Logger.debug("Feed {} from {} with {} failed!",
                            new Object[] {part.getId(), feeder, nozzle});
-                   if (feeder.getAutoSkipP()){
+                   if (feeder.isAutoSkipPick()){
                        makeSkip=true;
                    } 
                
@@ -722,8 +722,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    new Object[] {part, feeder, nozzle});
 
            // Move to the pick location
-           //Logger.debug("prePickTest");
-           //nozzle.prePickTest(part); //this is the future procedure to check before the pick whether the nozzle is empty
+           Logger.debug("prePickTest");
+           nozzle.prePickTest(part); //this is the procedure to check before the pick whether the nozzle is empty
            MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
 
           // Pick
@@ -742,7 +742,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                });
            }
           catch (Exception e) {
-              if (feeder.getAutoSkipP()) { 
+              if (feeder.isAutoSkipPick()) { 
               makeSkip=true;
               if (isAutoDisableFeeder() && !isDisableAutomatics()) {
                   feeder.setEnabled(false);
@@ -798,6 +798,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             part,
                             boardLocation,
                             placement.getLocation(), nozzle);
+                        // My customization: store the actual corrected rotation instead of the offset for shared C axis
+                        if (plannedPlacement.alignmentOffsets.getPreRotated()) {
+                            plannedPlacement.alignmentOffsets = new PartAlignment.PartAlignmentOffset(plannedPlacement.alignmentOffsets.getLocation().derive(null,null,null,nozzle.getLocation().getRotation()),true);
+                        }
+                        //                        
                             Logger.debug("Align {} with {}", part, nozzle);
                             Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
                             break;
@@ -825,7 +830,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         plannedPlacement.disableAlignment=false;    //picking was succeeded so we need to align the part.
                     }
                     else if(alignCount!=0){
-                        if (feeder.getAutoSkipA()) {
+                        if (feeder.isAutoSkipAlign()) {
                             makeSkip=true;
                             if (isAutoDisableFeeder() && !isDisableAutomatics()) {
                                 feeder.setEnabled(false);
@@ -854,6 +859,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     protected void doPlace() throws Exception {
+        // My customization: placement the parts in reversed sequence than picking N1N2N3>N3N2N1
+        Collections.reverse(plannedPlacements);
+        //    	
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
@@ -883,6 +891,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (plannedPlacement.alignmentOffsets.getPreRotated()) {
                     placementLocation = placementLocation.subtractWithRotation(
                             plannedPlacement.alignmentOffsets.getLocation());
+                    //My customization: restore the corrected rotation and override the offset calc for shared C axis
+                    placementLocation = placementLocation.derive(null,null,null,plannedPlacement.alignmentOffsets.getLocation().getRotation());
+                    //                    
                     }
                 else {
                     Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();

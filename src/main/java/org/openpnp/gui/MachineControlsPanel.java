@@ -51,8 +51,10 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.gui.support.PasteDispenserItem;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -308,6 +310,47 @@ public class MachineControlsPanel extends JPanel {
         }
     }
     public HomeAction homeAction = new HomeAction();
+   @SuppressWarnings("serial")
+    public Action vacOnAction = new AbstractAction("VAC ON") {
+        
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        	HeadMountable tool = getSelectedTool();
+        	 Actuator actuator = tool.getHead().getActuatorByName("VAC");
+			 //Actuator actuator = tool.getNozzle().getActuatorByName("VAC");
+ 			if (actuator!= null)
+ 			{
+ 				try {
+					actuator.actuate(true);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+ 			}
+        }
+    };
+    
+    @SuppressWarnings("serial")
+    public Action vacOffAction = new AbstractAction("VAC OFF") {
+        
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        	HeadMountable tool = getSelectedTool();
+        	 Actuator actuator = tool.getHead().getActuatorByName("VAC");
+			 //Actuator actuator = tool.getNozzle().getActuatorByName("VAC");
+ 			if (actuator!= null)
+ 			{
+ 				try {
+					actuator.actuate(false);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+ 			}
+        }
+    };
 
     @SuppressWarnings("serial")
     public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {

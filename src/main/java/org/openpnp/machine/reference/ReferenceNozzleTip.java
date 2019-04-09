@@ -480,9 +480,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 	            angle = Math.toRadians(angle);
 	            
 	            // convert from polar coords to xy cartesian offset values
-	            double offsetX = this.centerX + (this.radius * Math.cos(angle));
-	            double offsetY = this.centerY + (this.radius * Math.sin(angle));
-
+	            //double offsetX = this.centerX + (this.radius * Math.cos(angle));
+	            double offsetX = this.radius * Math.cos(angle);
+	            //double offsetY = this.centerY + (this.radius * Math.sin(angle));
+	            double offsetY = this.radius * Math.sin(angle);
 	            return new Location(LengthUnit.Millimeters, offsetX, offsetY, 0, 0);
 			}
 			
@@ -707,14 +708,17 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Location cameraLocation = camera.getLocation();
                 // This is our baseline location
                 Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d);
-
+                
+                // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
+                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
+                
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("nozzle", nozzle);
                 params.put("camera", camera);
                 Configuration.get().getScripting().on("NozzleCalibration.Starting", params);
                 
                 // move nozzle to the camera location at zero degree - the nozzle must not necessarily be at the center
-                MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
+                // MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation);
 
                 // determine the resulting angleIncrements
                 double angleIncrement = ( angleStop - angleStart ) / this.angleSubdivisions;

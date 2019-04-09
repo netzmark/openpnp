@@ -18,6 +18,12 @@ public interface Nozzle
      * @return
      */
     NozzleTip getNozzleTip();
+    
+    /**
+     * Commands the Nozzle to perform wether the nozzle is empty just before the pick procedure. 
+     * @throws Exception
+     */	
+    public void prePickTest(Part part) throws Exception;
 
     /**
      * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning

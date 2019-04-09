@@ -35,10 +35,10 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     protected int pickRetryCount = 0;
     
     @Attribute(required=false)    
-    protected boolean autoSkipA = false;
+    protected boolean autoSkipAlign = false;
     
     @Attribute(required=false)    
-    protected boolean autoSkipP = false;
+    protected boolean autoSkipPick = false;
     
     protected Part part;
 
@@ -120,20 +120,20 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         this.pickRetryCount = pickRetryCount;
     }
     
-    public boolean getAutoSkipA() {
-        return autoSkipA;
+    public boolean isAutoSkipAlign() {
+        return autoSkipAlign;
     }
     
-    public void setAutoSkipA(boolean autoSkipA) {
-        this.autoSkipA = autoSkipA;
+    public void setAutoSkipAlign(boolean autoSkipAlign) {
+        this.autoSkipAlign = autoSkipAlign;
     }
     
-    public boolean getAutoSkipP() {
-        return autoSkipP;
+    public boolean isAutoSkipPick() {
+        return autoSkipPick;
     }
     
-    public void setAutoSkipP(boolean autoSkipP) {
-        this.autoSkipP = autoSkipP;
+    public void setAutoSkipPick(boolean autoSkipPick) {
+        this.autoSkipPick = autoSkipPick;
     }
     
     @Override

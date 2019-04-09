@@ -24,6 +24,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.JobProcessor;//
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -66,20 +67,25 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     protected ReferenceNozzleTip nozzleTip;
 
+    Actuator actVacuum; // Marek change: machine is faster, but need program restart if name changes. vacuum actuator
     public ReferenceNozzle() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 nozzleTip = (ReferenceNozzleTip) nozzleTips.get(currentNozzleTipId);
+                actDown = getHead().getMachine().getActuator(getId()); // Marek change: actuator added to can control lower/raise Nozzle from RefferenceNozzle
+                actVacuum = getHead().getMachine().getActuator(getId()+"_VAC"); // Marek change: actuator added to can control vacuum on/off from RefferenceNozzle
+
             }
         });
     }
 
+    
     public ReferenceNozzle(String id) {
         this();
         this.id = id;
     }
-    
+
     public boolean isLimitRotation() {
         return limitRotation;
     }
@@ -134,8 +140,56 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public ReferenceNozzleTip getNozzleTip() {
         return nozzleTip;
     }
-
+    
     @Override
+    public void prePickTest(Part part) throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
+        //Logger.debug("prePickTest void");
+        if (part == null) {
+            throw new Exception("Can't pick null part");
+        }
+        if (nozzleTip == null) {
+            throw new Exception("Can't pick, no nozzle tip loaded");
+        }
+        this.part = part;
+        getDriver().pick(this);
+        getMachine().fireMachineHeadActivity(head);
+        
+        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        if (actuator != null) {
+            ReferenceNozzleTip nt = getNozzleTip();
+            double vacuumLevel = Double.parseDouble(actuator.read());
+            if (invertVacuumSenseLogic) {
+                if (vacuumLevel < (nt.getVacuumLevelPartOff()-50)) { //50 is offset, if it is >(Off-offset) means nozzle is not empty before pick
+                    throw new Exception(String.format(
+                        "Pick failure: Vacuum level %f is lower than expected value of %f for part off. Part may be stuck to nozzle.",
+                        vacuumLevel, nt.getVacuumLevelPartOff()));
+                }
+            }
+            else {
+                if (vacuumLevel > (nt.getVacuumLevelPartOff()+50)) { //50 is offset, if it is >(Off+offset) means nozzle is not empty before pick
+                    throw new Exception(String.format(
+                        "Pick failure: Vacuum level %f is higher than expected value of %f for part off. Part may be stuck to nozzle.",
+                        vacuumLevel, nt.getVacuumLevelPartOff()));
+                }
+            }
+        }
+    }
+
+    
+    @Override
+    //Idea of operation is:
+    //- Zdown actuated from JobProcessor; I have added actDown new actuator to RefferenceNozzle to lower/raise my pneumatic nozzle
+    //- PumpOn in PICK_COMMAND or even not needed tu do it here if vacumm ramained on nozzle after 
+    //Placement - as I do having blowing nozzle venturies where vacuum better to have turned ON
+    //before feeder position achieved because pressure blowout the parts from the tape.
+    //- pickDwellTime; I don't need it here but others may need.
+    //- first vacuum check to detect "VacuumLevelPartOn" level; to lift nozzle up asap; option: vacuum level tracking
+    //- Zup; I do it with my new actDown actuator. For those who have typical Z-motor control you need to 
+    //implement it somwhow - out of range of my skills :-(. Or just put proper gCode into an actuator maybe.
+    //- pickDwellTime; I personaly prefer have it here
+    //- second vacuum check to detect "VacuumLevelPartOn" level; to confirm the part is really raised up
+    //- end
+
     public void pick(Part part) throws Exception {
         Logger.debug("{}.pick()", getName());
         if (part == null) {
@@ -147,32 +201,76 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.part = part;
         getDriver().pick(this);
         getMachine().fireMachineHeadActivity(head);
-        
-        // Dwell Time
-        Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+
+        //actDown.actuate(true); //lowering nozzle before makePick. Removed because the system made it automaticaly before
 
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
-        if (actuator != null) {
+
+        if (actuator != null) { 
+            int times=10;
             ReferenceNozzleTip nt = getNozzleTip();
-            double vacuumLevel = Double.parseDouble(actuator.read());
+            double vacuumLevel;
+
+    //First vacuum check (before nozzle rising) to rise it up immediately ----
+    //(vacuum value is rising after the nozzle touched to the part, so we track the rising to avoid hard dwell time counting) 
+            while(times-->0) {
+                vacuumLevel = Double.parseDouble(actuator.read());
+            
+                if (invertVacuumSenseLogic) {
+                    if (vacuumLevel > nt.getVacuumLevelPartOn()) {
+                        Thread.sleep(10);
+                    }
+                else { break; }
+                }
+                else {
+                    if (vacuumLevel < nt.getVacuumLevelPartOn()) {
+                        Thread.sleep(10);
+                    }
+                    else { break; }
+                }
+            };
+
+            if(actDown!=null) {
+                Logger.debug("{}.moveTo(Nozzle Up)", getId());
+                actDown.actuate(false); //rising nozzle immediately after the VacuumLevelPartOn value detected or full loop finished
+                Logger.debug("pickDwellTime between checks: {}ms", (getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds()));
+                Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+            }
+
+    // Second vacuum check (after nozzle rising), single check is enough to confirm whether the part is not dropped)
+            vacuumLevel = Double.parseDouble(actuator.read());
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel > nt.getVacuumLevelPartOn()) {
                     throw new Exception(String.format(
-                            "Pick failure: Vacuum level %f is higher than expected value of %f for part on. Part may have failed to pick.",
+                        "Pick failure: Vacuum level %f is higher than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
                             vacuumLevel, nt.getVacuumLevelPartOn()));
                 }
             }
             else {
                 if (vacuumLevel < nt.getVacuumLevelPartOn()) {
                     throw new Exception(String.format(
-                            "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick.",
-                            vacuumLevel, nt.getVacuumLevelPartOn()));
+                        "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
+                         vacuumLevel, nt.getVacuumLevelPartOn()));
                 }
             }
         }
     }
 
     @Override
+    //Idea of operation is:
+    //- Zdown actuated from JobProcessor; I have added actDown new actuator to RefferenceNozzle lower/raise my pneumatic nozzle.
+    //- PumpOFF in PLACE_COMMAND;
+    //- placeDwellTime; I don't need it here but others may need. 
+    //- first vacuum check to detect "VacuumLevelPartOff" level; to can lift the nozzle up asap. Optional with level tracking.
+    //- Zup; I do it with my new actDown actuator. For those who have typical Z-motor control you need to 
+    //implement it somwhow - out of range of my skills :-(. Or just put proper gCode into an actuator maybe.
+    //- actVacuum new actuator added to turn PumpON again before second vacuum check
+    //- placeDwellTime; I personaly prefer have it here
+    //- second vacuum check to detect "VacuumLevelPartOff" level; to confirm the part is really released. Optional with level tracking.
+    //- optional: actVacuum new actuator added to turn PumpOFF; I don't do it because need remain vacuum on empty nozzle.
+    //- end
+    // Warning: would be usable to have also single check before first Zdown but I don't know how to do it here in RefferenceNozzle.
+        
     public void place() throws Exception {
         Logger.debug("{}.place()", getName());
         if (nozzleTip == null) {
@@ -181,14 +279,44 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getDriver().place(this);
         this.part = null;
         getMachine().fireMachineHeadActivity(head);
-        
-        // Dwell Time
-        Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
-
+        //Thread.sleep(placeDwellMilliseconds); //it's original place of this dwell but I don't need it here
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
-        if (actuator != null) {
+
+        if (actuator != null) { 
+            int times=25;
             ReferenceNozzleTip nt = getNozzleTip();
-            double vacuumLevel = Double.parseDouble(actuator.read());
+            double vacuumLevel;
+    //---- in Place, First vacuum check (after pumpOFF placed in PLACE_COMMAND (before nozzle rising)) ----
+
+    //vacuum value tracking first loop start, remove this block if don't want that kind of tracking  
+   	        while(times-->0) {
+            vacuumLevel = Double.parseDouble(actuator.read());
+
+        if (invertVacuumSenseLogic) {
+            if (vacuumLevel < nt.getVacuumLevelPartOff()) {
+                Thread.sleep(10); //was 20ms 
+            }
+            else { break; }
+            }
+        else {
+            if (vacuumLevel > nt.getVacuumLevelPartOff()) {
+                Thread.sleep(10); //was 20ms 
+            }
+            else { break; }
+        }
+           };
+    //vacuum sequence monitoring first loop ended
+
+            if(actDown!=null) {
+                Logger.debug("{}.moveTo(Nozzle Up)", getId());
+                actDown.actuate(false); //rising nozzle immediately after the VacuumLevelPartOff value detected or full loop finished
+                Logger.debug("placeDwellTime between checks: {}ms", (getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds()));
+                Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
+                actVacuum.actuate(true); //pumpON to check in later procedure (prePickTest) if the part has not stayed on nozzle UWAGA MOZE DO SKRYPTU
+            }
+
+    // Second vacuum check (after nozzle rising), single check is enough to confirm whether the part is not glued)
+             vacuumLevel = Double.parseDouble(actuator.read());
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel < nt.getVacuumLevelPartOff()) {
                     throw new Exception(String.format(
@@ -206,6 +334,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
     }
 
+    Actuator actDown; // Marek change: line added by Cri  /////consider if still needed it here
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
@@ -213,6 +342,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // https://github.com/openpnp/openpnp/issues/255
         // In the mean time, since Double.NaN would cause a problem for calibration, we shortcut
         // it here by replacing any NaN values with the current value from the driver.
+        Location loc=location.derive(null,null,null,null);
+        location = location.convertToUnits(LengthUnit.Millimeters);
         Location currentLocation = getLocation().convertToUnits(location.getUnits());
         if (Double.isNaN(location.getX())) {
             location = location.derive(currentLocation.getX(), null, null, null);
@@ -244,6 +375,51 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         } else {
             Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
         }
+
+        // inhibit motion if no change. //Marek change: to inhibit unnecessary move repetition
+        int n=0;
+        if (location.getX()==currentLocation.getX()) { n++;
+            location = location.derive(Double.NaN, null, null, null);
+        }
+        if (location.getY()==currentLocation.getY()) { n++;
+            location = location.derive(null,Double.NaN, null, null);
+        }
+        if (location.getZ()==currentLocation.getZ()) { n++;
+            location = location.derive(null,null,Double.NaN, null);
+        }
+        if (location.getRotation()==currentLocation.getRotation()) { n++;
+            location = location.derive(null,null,null,Double.NaN);
+        }
+        if(n==4) { return; }
+
+        //Marek change: section below is to fire actuator for pneumatic head control in relation to Z location (change at -2)
+        if(actDown!=null) {
+                if(location.getZ()<-2 && currentLocation.getZ() >=-2) {
+                Logger.debug("TEST #101: {}.moveTo(Nozzle Down)", getId());
+                actDown.actuate(true);
+                }
+                if(location.getZ()>=-2 && currentLocation.getZ() <-2) {
+                Logger.debug("TEST #102: {}.moveTo(Nozzle Up)", getId());
+                actDown.actuate(false);
+                }
+        }
+
+    // avoid bug inside Gcode driver
+        if (Double.isNaN(location.getX())) {
+            location = location.derive(currentLocation.getX(), null, null, null);
+        }
+        if (Double.isNaN(location.getY())) {
+            location = location.derive(null, currentLocation.getY(), null, null);
+        }
+        if (Double.isNaN(location.getZ())) {
+            location = location.derive(null, null, currentLocation.getZ(), null);
+        }
+        if (Double.isNaN(location.getRotation())) {
+            location = location.derive(null, null, null, currentLocation.getRotation());
+        }
+        location = location.convertToUnits(loc.getUnits());	// convert units back;
+    // ending of addition
+
         ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
@@ -254,8 +430,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Length safeZ = this.safeZ.convertToUnits(getLocation().getUnits());
         Location l = new Location(getLocation().getUnits(), Double.NaN, Double.NaN,
                 safeZ.getValue(), Double.NaN);
-        getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
-        getMachine().fireMachineHeadActivity(head);
+        //getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed); //Marek change
+        //getMachine().fireMachineHeadActivity(head); //Marek change
+        moveTo(l); // Marek change: added by Cri instead of above two lines
     }
 
     @Override
@@ -266,12 +443,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
-        if (changerEnabled) {
+        //if (changerEnabled) {
             double speed = getHead().getMachine().getSpeed();
             
             unloadNozzleTip();
+
             Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
 
+            if (changerEnabled) {
             Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                     new Object[] {getName(), nozzleTip.getName()});
             MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocation(), speed);
@@ -283,15 +462,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2",
                     new Object[] {getName(), nozzleTip.getName()});
             moveTo(nt.getChangerMidLocation2(), nt.getChangerMidToMid2Speed() * speed);
-
+            }
             Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
                     new Object[] {getName(), nozzleTip.getName()});
             moveTo(nt.getChangerEndLocation(), nt.getChangerMid2ToEndSpeed() * speed);
             moveToSafeZ(getHead().getMachine().getSpeed());
+            //}
 
             Logger.debug("{}.loadNozzleTip({}): Finished",
                     new Object[] {getName(), nozzleTip.getName()});
-            
+        
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("head", getHead());
@@ -303,7 +483,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             catch (Exception e) {
                 Logger.warn(e);
             }
-        }
         
         this.nozzleTip = nt;
         this.nozzleTip.getCalibration().reset();
@@ -317,7 +496,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             return;
         }
-        
+
         double speed = getHead().getMachine().getSpeed();
         
         Logger.debug("{}.unloadNozzleTip(): Start", getName());
@@ -326,19 +505,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
         MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocation(), speed);
 
-        if (changerEnabled) {
+        // if (changerEnabled) {
             Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
             moveTo(nt.getChangerMidLocation2(), nt.getChangerMid2ToEndSpeed() * speed);
 
+        if (changerEnabled) {
             Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
             moveTo(nt.getChangerMidLocation(), nt.getChangerMidToMid2Speed() * speed);
 
             Logger.debug("{}.unloadNozzleTip(): moveTo Start Location", getName());
             moveTo(nt.getChangerStartLocation(), nt.getChangerStartToMidSpeed() * speed);
             moveToSafeZ(getHead().getMachine().getSpeed());
-
+        }
             Logger.debug("{}.unloadNozzleTip(): Finished", getName());
-            
+        
             try {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("head", getHead());
@@ -350,13 +530,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             catch (Exception e) {
                 Logger.warn(e);
             }
-        }
-        
+
         nozzleTip = null;
         currentNozzleTipId = null;
         firePropertyChange("nozzleTip", null, getNozzleTip());
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
-        
+
         if (!changerEnabled) {
             throw new Exception("Manual NozzleTip change required!");
         }
@@ -403,7 +582,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard")
-        };
+      };
     }
 
     @Override
@@ -420,7 +599,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            if (getHead().getNozzles().size() == 1) {
+           if (getHead().getNozzles().size() == 1) {
                 MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", "Can't delete last nozzle. There must be at least one nozzle.");
                 return;
             }

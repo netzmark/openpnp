@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -58,6 +59,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
@@ -66,6 +68,7 @@ import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -115,6 +118,9 @@ public class JogControlsPanel extends JPanel {
         xyParkAction.setEnabled(enabled);
         zParkAction.setEnabled(enabled);
         cParkAction.setEnabled(enabled);
+        botAction.setEnabled(enabled);
+        machineControlsPanel.vacOffAction.setEnabled(enabled);
+        machineControlsPanel.vacOnAction.setEnabled(enabled);
         for (Component c : panelActuators.getComponents()) {
             c.setEnabled(enabled);
         }
@@ -130,7 +136,8 @@ public class JogControlsPanel extends JPanel {
             incrementsLabels.put(2, new JLabel("0.1")); //$NON-NLS-1$
             incrementsLabels.put(3, new JLabel("1.0")); //$NON-NLS-1$
             incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("100")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("90"));			
+            incrementsLabels.put(6, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else if (units == LengthUnit.Inches) {
@@ -139,7 +146,8 @@ public class JogControlsPanel extends JPanel {
             incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
             incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
             incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("10.0")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("90"));
+            incrementsLabels.put(6, new JLabel("10")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else {
@@ -150,10 +158,20 @@ public class JogControlsPanel extends JPanel {
 
     public double getJogIncrement() {
         if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
+            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 )
             return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
+            else if (sliderIncrements.getValue()==5 )
+                return 90.0;
+            else
+                return 0.01 * Math.pow(10, sliderIncrements.getValue() - 2);
         }
         else if (configuration.getSystemUnits() == LengthUnit.Inches) {
+            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 )
             return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
+        else if (sliderIncrements.getValue()==4 )
+            return 90.0;
+        else
+        return 0.001 * Math.pow(10, sliderIncrements.getValue() - 2);
         }
         else {
             throw new Error(
@@ -342,7 +360,7 @@ public class JogControlsPanel extends JPanel {
         sliderIncrements.setSnapToTicks(true);
         sliderIncrements.setPaintLabels(true);
         sliderIncrements.setMinimum(1);
-        sliderIncrements.setMaximum(5);
+        sliderIncrements.setMaximum(6);
 
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);
@@ -409,7 +427,15 @@ public class JogControlsPanel extends JPanel {
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
         positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera"));
-        panelControls.add(positionCameraBtn, "22, 8"); //$NON-NLS-1$
+        panelControls.add(positionCameraBtn, "22, 6"); //$NON-NLS-1$
+        JButton btnBot = new JButton(botAction);
+        panelControls.add(btnBot, "22, 8");
+
+        JButton btnVacOn = new JButton(machineControlsPanel.vacOnAction);
+        panelControls.add(btnVacOn, "2, 10");
+
+        JButton btnVacOff = new JButton(machineControlsPanel.vacOffAction);
+        panelControls.add(btnVacOff, "2, 12");
 
         JLabel lblC = new JLabel("C"); //$NON-NLS-1$
         lblC.setHorizontalAlignment(SwingConstants.CENTER);
@@ -427,6 +453,8 @@ public class JogControlsPanel extends JPanel {
         JButton clockwiseButton = new JButton(cMinusAction);
         clockwiseButton.setHideActionText(true);
         panelControls.add(clockwiseButton, "10, 12"); //$NON-NLS-1$
+        JButton btnDump = new JButton(discardAction);
+        panelControls.add(btnDump, "14, 12");
 
         JPanel panelSpecial = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Special"), null, panelSpecial, null); //$NON-NLS-1$
@@ -542,6 +570,61 @@ public class JogControlsPanel extends JPanel {
     };
 
     @SuppressWarnings("serial")
+    public Action botAction = new AbstractAction("", Icons.centerToolOnBotcam) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the bottom camera.");
+        }
+
+    @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Camera camera = VisionUtils.getBottomVisionCamera();
+                Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+
+                String localOffset = nozzle.getName();
+                Location startLocation = camera.getLocation();
+
+//                switch (localOffset) {
+//                    case "1": {
+//                        //startLocation = startLocation.derive(220.0, 150.0, null, null);
+//                        Location addedLocation = 
+//                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
+//                        startLocation = startLocation.add(addedLocation)
+//                                                .derive(null, null, null, null);
+//                        Logger.debug("ARTUR cameraJogLocationN1 {}", startLocation);
+//                    }
+//                        break;
+//                    case "2": {
+//                        Location addedLocation = 
+//                            new Location(startLocation.getUnits(), -0.02, -0.04, 0, 0);
+//                        startLocation = startLocation.add(addedLocation)
+//                                            .derive(null, null, null, null);
+//                        Logger.debug("ARTUR cameraJogLocationN2 {}", startLocation);
+//                    }
+//                        break;
+//                    case "3": {
+//                        Location addedLocation = 
+//                            new Location(startLocation.getUnits(), 0.06, -0.01, 0, 0);
+//                        startLocation = startLocation.add(addedLocation)
+//                                            .derive(null, null, null, null);
+//                    }
+//                        break;
+//                    default: {
+//                        Location addedLocation = 
+//                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
+//                        startLocation = startLocation.add(addedLocation)
+//                                            .derive(null, null, null, null);
+//                        Logger.debug("ARTUR cameraJogLocationDefault {}", startLocation);
+//                    }
+//                        break;
+//                }
+
+                MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
+            });
+         }
+    }; 
+
     public Action cPlusAction = new AbstractAction("C+", Icons.rotateCounterclockwise) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -638,41 +721,41 @@ public class JogControlsPanel extends JPanel {
                     Math.max(sliderIncrements.getMinimum(), sliderIncrements.getValue() - 1));
         }
     };
-	
+
     @SuppressWarnings("serial")
     public Action setIncrement1Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FirstJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(1);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement2Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.SecondJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(2);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement3Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.ThirdJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(3);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement4Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FourthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(4);
-		}
+        }
     };
     @SuppressWarnings("serial")
     public Action setIncrement5Action = new AbstractAction(Translations.getString("JogControlsPanel.Action.FifthJogIncrement")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             sliderIncrements.setValue(5);
-		}
+        }
     };
 
 

@@ -27,10 +27,12 @@ public class Icons {
     public static Icon centerCameraMoveNext = getIcon("/icons/position-camera-move-next.svg");
     public static Icon centerTool = getIcon("/icons/position-nozzle.svg");
     public static Icon centerToolNoSafeZ = getIcon("/icons/position-nozzle-no-safe-z.svg");
+    public static Icon centerToolOnBotcam = getIcon("/icons/position-nozzle-botcam.svg"); //
     public static Icon centerPin = getIcon("/icons/position-actuator.svg");
     public static Icon centerCameraOnFeeder = getIcon("/icons/position-camera-on-feeder.svg");
     public static Icon centerNozzleOnFeeder = getIcon("/icons/position-nozzle-on-feeder.svg");
-
+    //public static Icon centerCameraOnFeederJob = getIcon("/icons/position-camera-on-feeder-job.svg");//
+    
     public static Icon start = getIcon("/icons/control-start.svg");
     public static Icon pause = getIcon("/icons/control-pause.svg");
     public static Icon step = getIcon("/icons/control-next.svg");
@@ -45,6 +47,7 @@ public class Icons {
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");
     public static Icon place = getIcon("/icons/place.svg");
+    //public static Icon pickJob = getIcon("/icons/pick-job.svg");//    
     public static Icon showPart = getIcon("/icons/feeder-show-part-outline.svg");
     public static Icon editFeeder = getIcon("/icons/feeder-edit.svg");
     public static Icon feeder = getIcon("/icons/feeder.svg");
