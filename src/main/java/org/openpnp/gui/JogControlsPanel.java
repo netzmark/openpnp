@@ -136,7 +136,7 @@ public class JogControlsPanel extends JPanel {
             incrementsLabels.put(2, new JLabel("0.1")); //$NON-NLS-1$
             incrementsLabels.put(3, new JLabel("1.0")); //$NON-NLS-1$
             incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("90"));			
+            incrementsLabels.put(5, new JLabel("90")); //$NON-NLS-1$			
             incrementsLabels.put(6, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
@@ -146,7 +146,7 @@ public class JogControlsPanel extends JPanel {
             incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
             incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
             incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("90"));
+            incrementsLabels.put(5, new JLabel("90")); //$NON-NLS-1$
             incrementsLabels.put(6, new JLabel("10")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
@@ -158,20 +158,20 @@ public class JogControlsPanel extends JPanel {
 
     public double getJogIncrement() {
         if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
-            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 )
-            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
-            else if (sliderIncrements.getValue()==5 )
-                return 90.0;
-            else
-                return 0.01 * Math.pow(10, sliderIncrements.getValue() - 2);
+            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 ) {
+            	return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1); }
+            else if (sliderIncrements.getValue()==5 ) {
+                return 90.0; }
+            else {
+                return 0.01 * Math.pow(10, sliderIncrements.getValue() - 2); }
         }
         else if (configuration.getSystemUnits() == LengthUnit.Inches) {
-            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 )
-            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
-        else if (sliderIncrements.getValue()==4 )
-            return 90.0;
-        else
-        return 0.001 * Math.pow(10, sliderIncrements.getValue() - 2);
+            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 ) {
+            	return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1); }
+            else if (sliderIncrements.getValue()==4 ) {
+            	return 90.0; }
+            else {
+            	return 0.001 * Math.pow(10, sliderIncrements.getValue() - 2); }
         }
         else {
             throw new Error(

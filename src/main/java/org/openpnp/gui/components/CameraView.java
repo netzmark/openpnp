@@ -1347,7 +1347,7 @@ public class CameraView extends JComponent implements CameraListener {
     private MouseWheelListener mouseWheelListener = new MouseWheelListener() {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            zoom -= e.getPreciseWheelRotation() * 0.01d;
+            zoom -= e.getPreciseWheelRotation() * 0.1d;
             zoom = Math.max(zoom, 1.0d);
             zoom = Math.min(zoom, 100d);
             calculateScalingData();
