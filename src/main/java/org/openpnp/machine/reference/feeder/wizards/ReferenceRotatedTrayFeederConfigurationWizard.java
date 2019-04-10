@@ -105,8 +105,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private JTextField alignRetryCountTf;
 	private JLabel lblPickRetryCount;
 	private JTextField pickRetryCountTf;
-	private JCheckBox chckbxAutoSkipA;
-	private JCheckBox chckbxAutoSkipP;
+	private JCheckBox chckbxAutoSkipAlign;
+	private JCheckBox chckbxAutoSkipPick;
 
 	/**
 	 * @wbp.parser.constructor
@@ -174,7 +174,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		alignRetryCountTf = new JTextField();
 		alignRetryCountTf.setText("2");
 		panelPart.add(alignRetryCountTf, "8, 2, fill, default");
-		alignRetryCountTf.setColumns(18);
+		alignRetryCountTf.setColumns(16);
         
 		lblPickRetryCount = new JLabel("Pick Retry Count");
 		panelPart.add(lblPickRetryCount, "6, 4, right, default");
@@ -182,19 +182,19 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		pickRetryCountTf = new JTextField();
 		pickRetryCountTf.setText("3");
 		panelPart.add(pickRetryCountTf, "8, 4, fill, default");
-		pickRetryCountTf.setColumns(18);
+		pickRetryCountTf.setColumns(16);
 
-		chckbxAutoSkipA = new JCheckBox("");
-		panelPart.add(chckbxAutoSkipA, "10, 2, left, default");
+		chckbxAutoSkipAlign = new JCheckBox("");
+		panelPart.add(chckbxAutoSkipAlign, "10, 2, left, default");
         
-		JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
-		panelPart.add(lblAutoSkipA, "12, 2, left, default"); 
+		JLabel lblAutoSkipAlign = new JLabel("AutoSkip on Align Error");
+		panelPart.add(lblAutoSkipAlign, "12, 2, left, default"); 
         
-		chckbxAutoSkipP = new JCheckBox("");
-		panelPart.add(chckbxAutoSkipP, "10, 4, left, default");
+		chckbxAutoSkipPick = new JCheckBox("");
+		panelPart.add(chckbxAutoSkipPick, "10, 4, left, default");
         
-		JLabel lblAutoSkipP = new JLabel("AutoSkip on Feed/Pick Error");
-		panelPart.add(lblAutoSkipP, "12, 4, left, default");
+		JLabel lblAutoSkipPick = new JLabel("AutoSkip on Feed/Pick Error");
+		panelPart.add(lblAutoSkipPick, "12, 4, left, default");
 		
         lblRetryCount.setToolTipText("The number of Feeds to retry. <0> means just single Feeding with no retries.");
         retryCountTf.setToolTipText("The number of Feeds to retry. <0> means just single Feeding with no retries.");      
@@ -203,10 +203,10 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
         lblPickRetryCount.setToolTipText("The number of Picks to retry. <0> means just single Picking with no retries.");
         pickRetryCountTf.setToolTipText("The number of Picks to retry. <0> is deafult and means single Picking with no retries.");
         
-        chckbxAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
-        lblAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
-        chckbxAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
-        lblAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipAlign.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipAlign.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipPick.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipPick.setToolTipText("Skip placement when number of retries is reached.");
         
         if (includePickLocation) {
 			panelLocation = new JPanel();
@@ -449,8 +449,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		addWrappedBinding(feeder, "retryCount", retryCountTf, "text", intConverter);
 		addWrappedBinding(feeder, "alignRetryCount", alignRetryCountTf, "text", intConverter);
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
-		addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
-		addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");
+		addWrappedBinding(feeder, "autoSkipAlign", chckbxAutoSkipAlign, "selected");
+		addWrappedBinding(feeder, "autoSkipPick", chckbxAutoSkipPick, "selected");
 
         if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();

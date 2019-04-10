@@ -364,17 +364,17 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         whateverPanel.add(pickRetryCountTf, "12, 8, left, default");
         pickRetryCountTf.setColumns(10);
         
-        chckbxAutoSkipA = new JCheckBox("");
-        whateverPanel.add(chckbxAutoSkipA, "10, 14, right, default");
+        chckbxAutoSkipAlign = new JCheckBox("");
+        whateverPanel.add(chckbxAutoSkipAlign, "10, 14, right, default");
         
-        JLabel lblAutoSkipA = new JLabel("AutoSkip on Align Error");
-        whateverPanel.add(lblAutoSkipA, "12, 14, left, default"); 
+        JLabel lblAutoSkipAlign = new JLabel("AutoSkip on Align Error");
+        whateverPanel.add(lblAutoSkipAlign, "12, 14, left, default"); 
         
-        chckbxAutoSkipP = new JCheckBox("");
-        whateverPanel.add(chckbxAutoSkipP, "10, 12, right, default");
+        chckbxAutoSkipPick = new JCheckBox("");
+        whateverPanel.add(chckbxAutoSkipPick, "10, 12, right, default");
         
-        JLabel lblAutoSkipP = new JLabel("AutoSkip on Feed/Pick Error");
-        whateverPanel.add(lblAutoSkipP, "12, 12, left, default"); 
+        JLabel lblAutoSkipPick = new JLabel("AutoSkip on Feed/Pick Error");
+        whateverPanel.add(lblAutoSkipPick, "12, 12, left, default"); 
         
         lblRetryCount.setToolTipText("The number of Feeds to retry. <0> means just single Feeding with no retries.");
         retryCountTf.setToolTipText("The number of Feeds to retry. <0> means just single Feeding with no retries.");      
@@ -383,10 +383,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         lblPickRetryCount.setToolTipText("The number of Picks to retry. <0> means just single Picking with no retries.");
         pickRetryCountTf.setToolTipText("The number of Picks to retry. <0> is deafult and means single Picking with no retries.");
         
-        chckbxAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
-        lblAutoSkipA.setToolTipText("Skip placement when number of retries is reached.");
-        chckbxAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
-        lblAutoSkipP.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipAlign.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipAlign.setToolTipText("Skip placement when number of retries is reached.");
+        chckbxAutoSkipPick.setToolTipText("Skip placement when number of retries is reached.");
+        lblAutoSkipPick.setToolTipText("Skip placement when number of retries is reached.");
         
         bankNameTf = new JTextField();
         whateverPanel.add(bankNameTf, "8, 10, 3, 1");
@@ -503,8 +503,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
         ComponentDecorators.decorateWithAutoSelect(alignRetryCountTf);
         ComponentDecorators.decorateWithAutoSelect(pickRetryCountTf);
-        addWrappedBinding(feeder, "autoSkipA", chckbxAutoSkipA, "selected");
-        addWrappedBinding(feeder, "autoSkipP", chckbxAutoSkipP, "selected");        
+        addWrappedBinding(feeder, "autoSkipAlign", chckbxAutoSkipAlign, "selected");
+        addWrappedBinding(feeder, "autoSkipPick", chckbxAutoSkipPick, "selected");        
         
         feederPartCb.addActionListener(e -> {
             notifyChange();
@@ -569,8 +569,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private JTextField retryCountTf;
     private JTextField alignRetryCountTf;
     private JTextField pickRetryCountTf;
-    private JCheckBox chckbxAutoSkipA;
-    private JCheckBox chckbxAutoSkipP;
+    private JCheckBox chckbxAutoSkipAlign;
+    private JCheckBox chckbxAutoSkipPick;
     private LocationButtonsPanel offsetLocButtons;
     private LocationButtonsPanel pickLocButtons;
 }
