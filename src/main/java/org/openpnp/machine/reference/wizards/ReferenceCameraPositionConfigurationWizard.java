@@ -34,11 +34,19 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
     private JPanel panelOffsets;
     private JPanel panelLocation;
     private JLabel lblX;
+    private JLabel lblX2; ///+
+    private JLabel lblX3; ///+
     private JLabel lblY;
+    private JLabel lblY2; ///+
+    private JLabel lblY3; ///+
     private JLabel lblZ;
     private JLabel lblRotation_1;
     private JTextField textFieldLocationX;
+    private JTextField textFieldLocationX2; ///+
+    private JTextField textFieldLocationX3; ///+
     private JTextField textFieldLocationY;
+    private JTextField textFieldLocationY2; ///+
+    private JTextField textFieldLocationY3; ///+
     private JTextField textFieldLocationZ;
     private JTextField textFieldLocationRotation;
     private LocationButtonsPanel locationButtonsPanel;
@@ -64,6 +72,10 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC, ///+
+                FormSpecs.DEFAULT_ROWSPEC, ///+
+                FormSpecs.RELATED_GAP_ROWSPEC, ///+
+                FormSpecs.DEFAULT_ROWSPEC, ///+
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -123,14 +135,36 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,  ///+
+                FormSpecs.DEFAULT_ROWSPEC,  ///+
+                FormSpecs.RELATED_GAP_ROWSPEC,  ///+
+                FormSpecs.DEFAULT_ROWSPEC,  ///+
+                FormSpecs.RELATED_GAP_ROWSPEC,  ///+
+                FormSpecs.DEFAULT_ROWSPEC,  ///+
+                FormSpecs.RELATED_GAP_ROWSPEC,  ///+
+                FormSpecs.DEFAULT_ROWSPEC,  ///+
+                FormSpecs.RELATED_GAP_ROWSPEC,  ///+
+                FormSpecs.DEFAULT_ROWSPEC,  ///+
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblX = new JLabel("X");
         panelLocation.add(lblX, "2, 2");
+        
+        lblX2 = new JLabel("N2 X-offset");  ///+
+        panelLocation.add(lblX2, "2, 6");
+        
+        lblX3 = new JLabel("N3 X-offset");  ///+
+        panelLocation.add(lblX3, "2, 12");
 
         lblY = new JLabel("Y");
         panelLocation.add(lblY, "4, 2");
+        
+        lblY2 = new JLabel("N2 Y-offset");  ///+
+        panelLocation.add(lblY2, "4, 6");
+        
+        lblY3 = new JLabel("N3 Y-offset");  ///+
+        panelLocation.add(lblY3, "4, 12");
 
         lblZ = new JLabel("Z");
         panelLocation.add(lblZ, "6, 2");
@@ -141,10 +175,26 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         textFieldLocationX = new JTextField();
         panelLocation.add(textFieldLocationX, "2, 4, fill, default");
         textFieldLocationX.setColumns(8);
+        
+        textFieldLocationX2 = new JTextField(); ///+
+        panelLocation.add(textFieldLocationX2, "2, 8, fill, default");
+        textFieldLocationX2.setColumns(8);
+        
+        textFieldLocationX3 = new JTextField(); ///+
+        panelLocation.add(textFieldLocationX3, "2, 14, fill, default");
+        textFieldLocationX3.setColumns(8);
 
         textFieldLocationY = new JTextField();
         panelLocation.add(textFieldLocationY, "4, 4, fill, default");
         textFieldLocationY.setColumns(8);
+        
+        textFieldLocationY2 = new JTextField();
+        panelLocation.add(textFieldLocationY2, "4, 8, fill, default");
+        textFieldLocationY2.setColumns(8);
+        
+        textFieldLocationY3 = new JTextField();
+        panelLocation.add(textFieldLocationY3, "4, 14, fill, default");
+        textFieldLocationY3.setColumns(8);
 
         textFieldLocationZ = new JTextField();
         panelLocation.add(textFieldLocationZ, "6, 4, fill, default");
@@ -186,7 +236,11 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             bind(UpdateStrategy.READ_WRITE, referenceCamera, "headOffsets", headOffsets,
                     "location");
             addWrappedBinding(headOffsets, "lengthX", textFieldLocationX, "text", lengthConverter);
+            addWrappedBinding(referenceCamera, "xofs2", textFieldLocationX2, "text", doubleConverter); ///+
+            addWrappedBinding(referenceCamera, "xofs3", textFieldLocationX3, "text", doubleConverter); ///+
             addWrappedBinding(headOffsets, "lengthY", textFieldLocationY, "text", lengthConverter);
+            addWrappedBinding(referenceCamera, "yofs2", textFieldLocationY2, "text", doubleConverter); ///+
+            addWrappedBinding(referenceCamera, "yofs3", textFieldLocationY3, "text", doubleConverter); ///+
             addWrappedBinding(headOffsets, "lengthZ", textFieldLocationZ, "text", lengthConverter);
             addWrappedBinding(headOffsets, "rotation", textFieldLocationRotation, "text",
                     doubleConverter);
@@ -207,7 +261,11 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffZ);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX2); ///+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX3); ///+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY2); ///+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY3); ///+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);

@@ -192,7 +192,7 @@ public class JobPanel extends JPanel {
             }
         };
 
-        table.setAutoCreateRowSorter(true);
+        table.setAutoCreateRowSorter(true); //set true to enable sorter
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
 

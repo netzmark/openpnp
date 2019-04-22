@@ -43,6 +43,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor.PlannedPlacement;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
@@ -110,6 +111,18 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
+    
+    @Attribute(required = false)
+    protected double xofs2 = 0;
+    
+    @Attribute(required = false)
+    protected double xofs3 = 0;
+    
+    @Attribute(required = false)
+    protected double yofs2 = 0;
+    
+    @Attribute(required = false)
+    protected double yofs3 = 0;
     
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
@@ -255,7 +268,39 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setOffsetX(int offsetX) {
         this.offsetX = offsetX;
     }
+     
+    public double getXofs2() { ///+
+        return xofs2;
+    }
 
+    public void setXofs2(double xofs2) {///
+        this.xofs2 = xofs2;
+    }
+    
+    public double getXofs3() { ///+
+        return xofs3;
+    }
+
+    public void setXofs3(double xofs3) { ///+
+        this.xofs3 = xofs3;
+    }
+     
+    public double getYofs2() { ///+
+        return yofs2;
+    }
+
+    public void setYofs2(double yofs2) { ///+
+        this.yofs2 = yofs2;
+    }
+    
+    public double getYofs3() { ///+
+        return yofs3;
+    }
+
+    public void setYofs3(double yofs3) { ///+
+        this.yofs3 = yofs3;
+    }
+    
     public int getOffsetY() {
         return offsetY;
     }

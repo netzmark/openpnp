@@ -798,11 +798,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             part,
                             boardLocation,
                             placement.getLocation(), nozzle);
-                        // My customization: store the actual corrected rotation instead of the offset for shared C axis
-                        if (plannedPlacement.alignmentOffsets.getPreRotated()) {
-                            plannedPlacement.alignmentOffsets = new PartAlignment.PartAlignmentOffset(plannedPlacement.alignmentOffsets.getLocation().derive(null,null,null,nozzle.getLocation().getRotation()),true);
-                        }
-                        //                        
+//                        // My customization: store the actual corrected rotation instead of the offset for shared C axis
+//                        if (plannedPlacement.alignmentOffsets.getPreRotated()) {
+//                            plannedPlacement.alignmentOffsets = new PartAlignment.PartAlignmentOffset(plannedPlacement.alignmentOffsets.getLocation().derive(null,null,null,nozzle.getLocation().getRotation()),true);
+//                        }
+//                        //                        
                             Logger.debug("Align {} with {}", part, nozzle);
                             Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
                             break;
@@ -891,9 +891,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (plannedPlacement.alignmentOffsets.getPreRotated()) {
                     placementLocation = placementLocation.subtractWithRotation(
                             plannedPlacement.alignmentOffsets.getLocation());
-                    //My customization: restore the corrected rotation and override the offset calc for shared C axis
-                    placementLocation = placementLocation.derive(null,null,null,plannedPlacement.alignmentOffsets.getLocation().getRotation());
-                    //                    
+//                    //My customization: restore the corrected rotation and override the offset calc for shared C axis
+//                    placementLocation = placementLocation.derive(null,null,null,plannedPlacement.alignmentOffsets.getLocation().getRotation());
+//                    //                    
                     }
                 else {
                     Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();

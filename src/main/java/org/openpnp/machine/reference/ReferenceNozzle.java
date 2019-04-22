@@ -57,7 +57,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Attribute(required = false)
     protected boolean invertVacuumSenseLogic;
-
+    
+//    @Attribute(required = false)
+//    protected Length lengthXb = new Length(0, LengthUnit.Millimeters);
+//    
+//    @Attribute(required = false)
+//    protected Length lengthYb = new Length(0, LengthUnit.Millimeters);
+ 
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
      * 180 degrees. So, 190 degrees becomes -170 and -190 becomes 170.
@@ -109,6 +115,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
         this.placeDwellMilliseconds = placeDwellMilliseconds;
     }
+    
+    
+//    public Length getLengthXb() {
+//        return lengthXb;
+//    }
+//
+//    public void setLengthXb(Length lengthXb) {
+//        this.lengthXb = lengthXb;
+//    }
+//    
+//    
+//    public Length getLengthYb() {
+//        return lengthYb;
+//    }
+//
+//    public void setLengthYb(Length lengthYb) {
+//        this.lengthYb = lengthYb;
+//    }
 
     @Override
     public Location getHeadOffsets() {

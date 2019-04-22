@@ -585,40 +585,40 @@ public class JogControlsPanel extends JPanel {
                 String localOffset = nozzle.getName();
                 Location startLocation = camera.getLocation();
 
-//                switch (localOffset) {
-//                    case "1": {
-//                        //startLocation = startLocation.derive(220.0, 150.0, null, null);
-//                        Location addedLocation = 
-//                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
-//                        startLocation = startLocation.add(addedLocation)
-//                                                .derive(null, null, null, null);
-//                        Logger.debug("ARTUR cameraJogLocationN1 {}", startLocation);
-//                    }
-//                        break;
-//                    case "2": {
-//                        Location addedLocation = 
-//                            new Location(startLocation.getUnits(), -0.02, -0.04, 0, 0);
-//                        startLocation = startLocation.add(addedLocation)
-//                                            .derive(null, null, null, null);
-//                        Logger.debug("ARTUR cameraJogLocationN2 {}", startLocation);
-//                    }
-//                        break;
-//                    case "3": {
-//                        Location addedLocation = 
-//                            new Location(startLocation.getUnits(), 0.06, -0.01, 0, 0);
-//                        startLocation = startLocation.add(addedLocation)
-//                                            .derive(null, null, null, null);
-//                    }
-//                        break;
-//                    default: {
-//                        Location addedLocation = 
-//                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
-//                        startLocation = startLocation.add(addedLocation)
-//                                            .derive(null, null, null, null);
-//                        Logger.debug("ARTUR cameraJogLocationDefault {}", startLocation);
-//                    }
-//                        break;
-//                }
+                switch (localOffset) {
+                    case "1": {
+                        //startLocation = startLocation.derive(220.0, 150.0, null, null);
+                        Location addedLocation = 
+                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
+                        startLocation = startLocation.add(addedLocation)
+                                                .derive(null, null, null, null);
+                        Logger.debug("ARTUR cameraJogLocationN1 {}", startLocation);
+                    }
+                        break;
+                    case "2": {
+                        Location addedLocation = 
+                            new Location(startLocation.getUnits(), -0.02, -0.04, 0, 0);
+                        startLocation = startLocation.add(addedLocation)
+                                            .derive(null, null, null, null);
+                        Logger.debug("ARTUR cameraJogLocationN2 {}", startLocation);
+                    }
+                        break;
+                    case "3": {
+                        Location addedLocation = 
+                            new Location(startLocation.getUnits(), 0.06, -0.01, 0, 0);
+                        startLocation = startLocation.add(addedLocation)
+                                            .derive(null, null, null, null);
+                    }
+                        break;
+                    default: {
+                        Location addedLocation = 
+                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
+                        startLocation = startLocation.add(addedLocation)
+                                            .derive(null, null, null, null);
+                        Logger.debug("ARTUR cameraJogLocationDefault {}", startLocation);
+                    }
+                        break;
+                }
 
                 MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
             });

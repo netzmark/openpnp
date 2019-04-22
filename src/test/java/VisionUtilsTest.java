@@ -188,5 +188,21 @@ public class VisionUtilsTest {
         public void moveToSafeZ() throws Exception {
             moveToSafeZ(getHead().getMachine().getSpeed());
         }
+        
+        public double getXofs2() {  ///+
+            return 0;
+        }    
+        
+        public double getYofs2() { ///
+        return 0;
+        }
+        
+        public double getXofs3() {  ///+
+            return 0;
+        }    
+        
+        public double getYofs3() { ///
+        return 0;
+        }
     }
 }

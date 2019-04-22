@@ -47,7 +47,6 @@ import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.machine.reference.ReferencePnpJobProcessor.PlannedPlacement;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -57,16 +56,23 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
+
+import org.openpnp.spi.Feeder; //added
+import javax.swing.JSeparator; //added
+import javax.swing.SwingConstants; //added
+import org.openpnp.machine.reference.ReferencePnpJobProcessor; //added
+import org.openpnp.machine.reference.ReferencePnpJobProcessor.PlannedPlacement;
+
+import java.util.HashMap; //added
+
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -107,7 +113,9 @@ public class JobPlacementsPanel extends JPanel {
 
         captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
                 captureToolPlacementLocation, moveCameraToPlacementLocation,
-                moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
+                moveCameraToPlacementLocationNext, moveToolToPlacementLocation,
+                moveCameraToPickLocation, pickFeederAction); //added butons
+                //moveCameraToPickLocation, moveCameraToPickLocationJob, pickFeederAction, pickFeederActionJob); //added butons
         captureAndPositionActionGroup.setEnabled(false);
 
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
@@ -152,6 +160,29 @@ public class JobPlacementsPanel extends JPanel {
         JButton btnEditFeeder = new JButton(editPlacementFeederAction);
         btnEditFeeder.setHideActionText(true);
         toolBarPlacements.add(btnEditFeeder);
+
+        JSeparator separator = new JSeparator(); //added
+        separator.setOrientation(SwingConstants.VERTICAL); //added
+        toolBarPlacements.add(separator); //added
+
+//        JButton btnPickFeederActionJob = new JButton(pickFeederActionJob); //added
+//        btnPickFeederActionJob.setHideActionText(true); //added
+//        toolBarPlacements.add(btnPickFeederActionJob); //added
+//
+//        JButton btnMoveCameraToPickLocationJob = new JButton(moveCameraToPickLocationJob); //added
+//        btnMoveCameraToPickLocationJob.setHideActionText(true); //added
+//        toolBarPlacements.add(btnMoveCameraToPickLocationJob); //added
+
+        toolBarPlacements.addSeparator();
+
+        JButton btnPickFeederAction = new JButton(pickFeederAction); //added
+        btnPickFeederAction.setHideActionText(true); //added
+        toolBarPlacements.add(btnPickFeederAction); //added
+
+        JButton btnMoveCameraToPickLocation = new JButton(moveCameraToPickLocation); //added
+        btnMoveCameraToPickLocation.setHideActionText(true); //added
+        toolBarPlacements.add(btnMoveCameraToPickLocation); //added
+
         tableModel = new PlacementsTableModel(configuration);
         tableSorter = new TableRowSorter<>(tableModel);
 
@@ -302,9 +333,9 @@ public class JobPlacementsPanel extends JPanel {
 
             RowFilter<PlacementsTableModel, Object> rf = null;
             // If current expression doesn't parse, don't update.
-			try {
-				rf = RowFilter.regexFilter("(?i)" + boardLocation.getSide().toString());
-			}
+            try {
+                rf = RowFilter.regexFilter("(?i)" + boardLocation.getSide().toString());
+            }
             catch (PatternSyntaxException e) {
                 Logger.warn("Side sort failed", e);
                 return;
@@ -461,6 +492,170 @@ public class JobPlacementsPanel extends JPanel {
         }
     };
 
+    //added button "Move Camera To Part Pick Location"
+    public final Action moveCameraToPickLocation = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
+            putValue(NAME, "Move Camera To Part Pick Location");
+            putValue(SHORT_DESCRIPTION, "Position the camera at the selected part's pick location.");
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
+                Part part = getSelection().getPart();
+                Logger.debug("Moving camera to the part's {} pick location", part.getId());
+                Feeder feeder = null;
+                // find a feeder to feed
+                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+                    if (f.getPart() == part && f.isEnabled()) {
+                        feeder = f;
+                    }
+                }
+                if (feeder == null) {
+                    throw new Exception("No valid feeder found for " + part.getId());
+                }
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
+            });
+        }
+    };
+    
+//    //added button "Move Camera To Part Pick Location with the Job's assignments"
+//    Placement placement;
+//    
+//    public final Action moveCameraToPickLocationJob = new AbstractAction() {
+//        {
+//            putValue(SMALL_ICON, Icons.centerCameraOnFeederJob); //icons/position-camera-on-feeder-job.svg
+//            putValue(NAME, "Move Camera To Part Pick Location with the Job's assignments");
+//            putValue(SHORT_DESCRIPTION, "Position the camera at the part's pick location with the Job's assignments.");
+//        }
+//        
+//        @Override
+//        public void actionPerformed(ActionEvent arg0) {
+//            UiUtils.submitUiMachineTask(() -> {
+//                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
+//                Part part = placement.getPart();
+//                if (part!=null){    //we assume that if part!=null if we're in-Job process and while the vision that failed.
+//                    Logger.debug("Moving camera to the part's {} pick location", part.getId());
+//                    Feeder feeder = null;
+//                    // find a feeder to feed
+//                    for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+//                        if (f.getPart() == part && f.isEnabled()) {
+//                            feeder = f;
+//                        }
+//                    }
+//                    if (feeder == null) {
+//                        throw new Exception("No valid feeder found for " + part.getId());
+//                    }
+//                    Location pickLocation = feeder.getPickLocation();
+//                    MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
+//                }
+//            });
+//        }
+//    };
+
+    //added button "Perform a pick of the selected part with selected nozzle"
+    public final Action pickFeederAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.pick);
+            putValue(NAME, "Pick");
+            putValue(SHORT_DESCRIPTION, "Perform a pick of the selected part with selected nozzle.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Part part = getSelection().getPart();
+                Logger.debug("Picking {} with selected nozzle {}", part.getId(), nozzle.getName());
+                Feeder feeder = null;
+                // find a feeder to feed
+                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+                    if (f.getPart() == part && f.isEnabled()) {
+                        feeder = f;
+                    }
+                }
+                if (feeder == null) {
+                    throw new Exception("No valid feeder found for " + part.getId());
+                }
+   
+                // move to the discard location
+                MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
+                                                                        .getMachine()
+                                                                        .getDiscardLocation());
+                // discard the part
+                Logger.debug("Discarding nozzle nozzle {}", nozzle.getName());
+                nozzle.place();
+                nozzle.moveToSafeZ();
+   
+                // feed the chosen feeder
+                feeder.feed(nozzle);
+                // pick the part
+                Location pickLocation = feeder.getPickLocation();
+                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+                nozzle.pick(part);
+                nozzle.moveToSafeZ();
+            });
+        }
+    };
+
+//    //added button "Perform a pick the part with the Job's assignments"
+//    PlannedPlacement plannedPlacement;
+//    
+//    public final Action pickFeederActionJob = new AbstractAction() {
+//        {
+//            putValue(SMALL_ICON, Icons.pickJob); //icons/pick-job.svg
+//            putValue(NAME, "Pick Job");
+//            putValue(SHORT_DESCRIPTION, "Perform a pick the part with the Job's assignments.");
+//        }
+//
+//        @Override
+//        public void actionPerformed(ActionEvent arg0) {
+//            UiUtils.submitUiMachineTask(() -> {
+//            	Nozzle nozzle = plannedPlacement.nozzle;
+//                Part part = placement.getPart();
+//                if (part!=null){
+//                    Logger.debug("Picking missing {} with planned nozzle {}", part.getId(), nozzle.getName());
+//                    Feeder feeder = null;
+//                    // find a feeder to feed
+//                    for (Feeder f : Configuration.get().getMachine().getFeeders()) {
+//                        if (f.getPart() == part && f.isEnabled()) {
+//                            feeder = f;
+//                        }
+//                    }
+//                    if (feeder == null) {
+//                        throw new Exception("No valid feeder found for " + part.getId());
+//                    }
+//
+//   /*
+//                    // move to the discard location
+//                    MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
+//                                                                            .getMachine()
+//                                                                            .getDiscardLocation());
+//                    // discard the part
+//                    Logger.debug("Discarding nozzle nozzle {}", nozzle.getName());
+//                    nozzle.place();
+//                    nozzle.moveToSafeZ();
+//   */
+//
+//                    // feed the chosen feeder
+//                    feeder.feed(nozzle);
+//                    // pick the part
+//                    Location pickLocation = feeder.getPickLocation();
+//                    MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+//                    nozzle.pick(part);
+//                    nozzle.moveToSafeZ();
+//
+//                    // optionally continue the Job automatically after re-picking
+//                    Configuration.get().getScripting().on("Job.Continue", null);
+//                }
+//            });
+//        }
+//    };
+    //end of added button
+
     public final Action captureCameraPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureCamera);
@@ -481,93 +676,6 @@ public class JobPlacementsPanel extends JPanel {
             });
         }
     };
-    
-//    public final Action moveCameraToPickLocationJob = new AbstractAction() {
-//        {
-//            putValue(SMALL_ICON, Icons.centerCameraOnFeederJob); //icons/position-camera-on-feeder-job.svg
-//            putValue(NAME, "Move Camera To Part Pick Location with the Job's assignments");
-//            putValue(SHORT_DESCRIPTION, "Position the camera at the part's pick location with the Job's assignments.");
-//        }
-//    
-//    @Override
-//    public void actionPerformed(ActionEvent arg0) {
-//        UiUtils.submitUiMachineTask(() -> {
-//            Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera();
-//            JobPlacement jobPlacement;
-//            Placement placement = jobPlacement.placement;
-//            Part part = placement.getPart();
-//            if (part!=null){    //we assume that if part!=null if we're in-Job process and while the vision that failed.
-//                Logger.debug("Moving camera to the part's {} pick location", part.getId());
-//                Feeder feeder = null;
-//                // find a feeder to feed
-//                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-//                    if (f.getPart() == part && f.isEnabled()) {
-//                        feeder = f;
-//                    }
-//                }
-//                if (feeder == null) {
-//                    throw new Exception("No valid feeder found for " + part.getId());
-//                }
-//                Location pickLocation = feeder.getPickLocation();
-//                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
-//            }
-//        });
-//    }
-//};
-
-//public final Action pickFeederActionJob = new AbstractAction() {
-//    {
-//        putValue(SMALL_ICON, Icons.pickJob); //icons/pick-job.svg
-//        putValue(NAME, "Pick Job");
-//        putValue(SHORT_DESCRIPTION, "Perform a pick the part with the Job's assignments.");
-//    }
-//
-//    @Override
-//    public void actionPerformed(ActionEvent arg0) {
-//        UiUtils.submitUiMachineTask(() -> {
-//            
-//          JobPlacement jobPlacement;
-//          Placement placement = jobPlacement.placement;
-//          Part part = placement.getPart();
-//          Nozzle nozzle;        	
-//          //Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-//
-//            if (part!=null){
-//                Logger.debug("Picking missing {} with planned nozzle {}", part.getId(), nozzle.getName());
-//                Feeder feeder = null;
-//                // find a feeder to feed
-//                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-//                    if (f.getPart() == part && f.isEnabled()) {
-//                        feeder = f;
-//                    }
-//                }
-//                if (feeder == null) {
-//                    throw new Exception("No valid feeder found for " + part.getId());
-//                }
-//
-//                // move to the discard location
-//                MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
-//                                                                        .getMachine()
-//                                                                        .getDiscardLocation());
-//                // discard the part
-//                Logger.debug("Discarding nozzle nozzle {}", nozzle.getName());
-//                nozzle.place();
-//                nozzle.moveToSafeZ();
-//
-//                // feed the chosen feeder
-//                feeder.feed(nozzle);
-//                // pick the part
-//                Location pickLocation = feeder.getPickLocation();
-//                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-//                nozzle.pick(part);
-//                nozzle.moveToSafeZ();
-//
-//                // optionally continue the Job automatically after re-picking
-//                Configuration.get().getScripting().on("Job.Continue", null);
-//            }
-//        });
-//    }
-//};
 
     public final Action captureToolPlacementLocation = new AbstractAction() {
         {
