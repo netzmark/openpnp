@@ -113,10 +113,16 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     private LensCalibrationParams calibration = new LensCalibrationParams();
     
     @Attribute(required = false)
+    protected double xofs1 = 0;
+    
+    @Attribute(required = false)
     protected double xofs2 = 0;
     
     @Attribute(required = false)
     protected double xofs3 = 0;
+    
+    @Attribute(required = false)
+    protected double yofs1 = 0;
     
     @Attribute(required = false)
     protected double yofs2 = 0;
@@ -268,12 +274,20 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void setOffsetX(int offsetX) {
         this.offsetX = offsetX;
     }
+    
+    public double getXofs1() { ///+
+        return xofs1;
+    }
+
+    public void setXofs1(double xofs1) { ///+
+        this.xofs1 = xofs1;
+    }
      
     public double getXofs2() { ///+
         return xofs2;
     }
 
-    public void setXofs2(double xofs2) {///
+    public void setXofs2(double xofs2) { ///+
         this.xofs2 = xofs2;
     }
     
@@ -283,6 +297,14 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setXofs3(double xofs3) { ///+
         this.xofs3 = xofs3;
+    }
+    
+    public double getYofs1() { ///+
+        return yofs1;
+    }
+
+    public void setYofs1(double yofs1) { ///+
+        this.yofs1 = yofs1;
     }
      
     public double getYofs2() { ///+

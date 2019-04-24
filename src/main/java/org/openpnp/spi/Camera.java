@@ -114,6 +114,10 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public long getSettleTimeMs();
 
     public void setSettleTimeMs(long settleTimeMs);
+    
+    public double getXofs1(); ///+
+    
+    public double getYofs1(); ///+
 
     public double getXofs2(); ///+
     

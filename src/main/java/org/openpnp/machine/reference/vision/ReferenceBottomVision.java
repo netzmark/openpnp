@@ -67,7 +67,7 @@ public class ReferenceBottomVision implements PartAlignment {
 //    @Attribute(required = false)
 //    protected double yofs = 1.0; 
     
-    String nozzleName = "0"; //marek
+    String nozzleName = "0"; ///+
 
 
     @Override
@@ -106,8 +106,8 @@ public class ReferenceBottomVision implements PartAlignment {
     	double yofs = 0;
     	switch (nozzleName) {
 	      	case "1": {
-	      		xofs=0.;
-	      		yofs=0.;
+	      		xofs=camera.getXofs1();
+	      		yofs=camera.getYofs1();
 	      	} break;
 	  		case "2": {
 	  			xofs=camera.getXofs2();

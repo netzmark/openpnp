@@ -81,7 +81,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JLabel lblCalibrationInfo;
     private JLabel lblCalibrationResults;
     private JCheckBox calibrationEnabledCheckbox;
-
+    //private JCheckBox addOffsetCheckbox; ///+/
 
     public ReferenceNozzleTipCalibrationWizard(ReferenceNozzleTip nozzleTip) {
         this.nozzleTip = nozzleTip;
@@ -118,8 +118,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         calibrationEnabledCheckbox = new JCheckBox("Enable?");
         panelCalibration.add(calibrationEnabledCheckbox, "2, 2, right, default");
-
-
+        
         buttonCenterTool = new JButton(positionToolAction);
         buttonCenterTool.setHideActionText(true);
         panelCalibration.add(buttonCenterTool, "4, 2, left, default");
@@ -176,7 +175,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         lblOffsetThreshold = new JLabel("Offset Threshold");
         panelCalibration.add(lblOffsetThreshold, "2, 12, right, default");
-
+        
+//        addOffsetCheckbox = new JCheckBox("Add Offset"); ///+/
+//        panelCalibration.add(addOffsetCheckbox, "6, 2, right, default");
+        
         offsetThresholdTf = new JTextField();
         panelCalibration.add(offsetThresholdTf, "4, 12, left, default");
         offsetThresholdTf.setColumns(6);
@@ -222,7 +224,35 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 HeadMountable nozzle = nozzleTip.getParentNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Location location = camera.getLocation();
-
+                String nozzleName = nozzle.getName();
+                
+          	double xofs = 0;
+          	double yofs = 0;
+          	switch (nozzleName) {
+      	      	case "1": {
+      	      		xofs=camera.getXofs1();
+      	      		yofs=camera.getYofs1();
+      	      	} break;
+      	  		case "2": {
+      	  			xofs=camera.getXofs2();
+      	  			yofs=camera.getYofs2();
+      	  		} break;
+      	  		case "3": {
+      	  			xofs=camera.getXofs3();
+      	  			yofs=camera.getYofs3();
+      	  		} break;
+      	  		default: {
+      	  			xofs=0.;
+      	  			yofs=0.;
+      	  		} break;
+      	  	}
+          	
+            location = camera.getLocation()
+                    .add(new Location(location
+                            .getUnits(),
+                            xofs, yofs, 0, 0))
+                    .derive(null, null, null, null);               
+                
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             });
         }
@@ -265,6 +295,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox,
                 "selected");
+//        addWrappedBinding(nozzleTip.getCalibration(), "addOffset", addOffsetCheckbox, ///+/
+//                "selected");       
         addWrappedBinding(nozzleTip.getCalibration(), "runoutCompensationAlgorithm",
                 compensationAlgorithmCb, "selectedItem");
         addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf,

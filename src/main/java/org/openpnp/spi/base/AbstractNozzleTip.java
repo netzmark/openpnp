@@ -13,6 +13,9 @@ public abstract class AbstractNozzleTip extends AbstractModelObject implements N
 
     @Attribute(required = false)
     protected String name;
+    
+//    @Attribute(required=false) ///+/    
+//    protected boolean addOffset = false;
 
     public AbstractNozzleTip() {
         this.id = Configuration.createId("TIP");
@@ -40,4 +43,15 @@ public abstract class AbstractNozzleTip extends AbstractModelObject implements N
     public Icon getPropertySheetHolderIcon() {
         return null;
     }
+    
+    
+//    public boolean isAddOffset() { ///+/
+//        return addOffset;
+//    }
+//    
+//    public void setAddOffset(boolean addOffset) { ///+/
+//        this.addOffset = addOffset;
+//    }
+    
+    
 }

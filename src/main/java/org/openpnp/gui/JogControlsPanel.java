@@ -582,44 +582,72 @@ public class JogControlsPanel extends JPanel {
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
 
-                String localOffset = nozzle.getName();
+                String nozzleName = nozzle.getName();
                 Location startLocation = camera.getLocation();
-
-                switch (localOffset) {
-                    case "1": {
-                        //startLocation = startLocation.derive(220.0, 150.0, null, null);
-                        Location addedLocation = 
-                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
-                        startLocation = startLocation.add(addedLocation)
-                                                .derive(null, null, null, null);
-                        Logger.debug("ARTUR cameraJogLocationN1 {}", startLocation);
-                    }
-                        break;
-                    case "2": {
-                        Location addedLocation = 
-                            new Location(startLocation.getUnits(), -0.02, -0.04, 0, 0);
-                        startLocation = startLocation.add(addedLocation)
-                                            .derive(null, null, null, null);
-                        Logger.debug("ARTUR cameraJogLocationN2 {}", startLocation);
-                    }
-                        break;
-                    case "3": {
-                        Location addedLocation = 
-                            new Location(startLocation.getUnits(), 0.06, -0.01, 0, 0);
-                        startLocation = startLocation.add(addedLocation)
-                                            .derive(null, null, null, null);
-                    }
-                        break;
-                    default: {
-                        Location addedLocation = 
-                            new Location(startLocation.getUnits(), 0, 0, 0, 0);
-                        startLocation = startLocation.add(addedLocation)
-                                            .derive(null, null, null, null);
-                        Logger.debug("ARTUR cameraJogLocationDefault {}", startLocation);
-                    }
-                        break;
-                }
-
+                
+            	double xofs = 0;
+            	double yofs = 0;
+            	switch (nozzleName) {
+        	      	case "1": {
+        	      		xofs=camera.getXofs1();
+        	      		yofs=camera.getYofs1();
+        	      	} break;
+        	  		case "2": {
+        	  			xofs=camera.getXofs2();
+        	  			yofs=camera.getYofs2();
+        	  		} break;
+        	  		case "3": {
+        	  			xofs=camera.getXofs3();
+        	  			yofs=camera.getYofs3();
+        	  		} break;
+        	  		default: {
+        	  			xofs=0.;
+        	  			yofs=0.;
+        	  		} break;
+        	  	}
+            	
+              startLocation = camera.getLocation()
+                      .add(new Location(startLocation
+                              .getUnits(),
+                              xofs, yofs, 0, 0))
+                      .derive(null, null, null, null);
+                
+                
+//            //startLocation = startLocation.derive(220.0, 150.0, null, null);
+//              switch (nozzleName) {
+//              case "1": {
+//                  Location addedLocation = 
+//                      new Location(startLocation.getUnits(), camera.getXofs1(), camera.getYofs1(), 0, 0);
+//                  startLocation = startLocation.add(addedLocation)
+//                                          .derive(null, null, null, null);
+//                  Logger.debug("ARTUR cameraJogLocationN1 {}", startLocation);
+//              }
+//                  break;
+//              case "2": {
+//                  Location addedLocation = 
+//                      new Location(startLocation.getUnits(), camera.getXofs2(), camera.getYofs2(), 0, 0);
+//                  startLocation = startLocation.add(addedLocation)
+//                                      .derive(null, null, null, null);
+//                  Logger.debug("ARTUR cameraJogLocationN2 {}", startLocation);
+//              }
+//                  break;
+//              case "3": {
+//                  Location addedLocation = 
+//                      new Location(startLocation.getUnits(), camera.getXofs3(), camera.getYofs3(), 0, 0);
+//                  startLocation = startLocation.add(addedLocation)
+//                                      .derive(null, null, null, null);
+//              }
+//                  break;
+//              default: {
+//                  Location addedLocation = 
+//                      new Location(startLocation.getUnits(), 0, 0, 0, 0);
+//                  startLocation = startLocation.add(addedLocation)
+//                                      .derive(null, null, null, null);
+//                  Logger.debug("ARTUR cameraJogLocationDefault {}", startLocation);
+//              }
+//                  break;
+//          }                
+                
                 MovableUtils.moveToLocationAtSafeZ(nozzle, startLocation);
             });
          }
