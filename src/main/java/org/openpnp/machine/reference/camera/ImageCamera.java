@@ -133,7 +133,7 @@ public class ImageCamera extends ReferenceCamera implements Runnable {
         double locationX = location.getX();
         double locationY = location.getY();
 
-        double pixelX = locationX / getUnitsPerPixel().getX();
+        double pixelX = locationX / getUnitsPerPixel().getX(); /////
         double pixelY = locationY / getUnitsPerPixel().getY();
 
         int dx1 = (int) (pixelX - (width / 2));

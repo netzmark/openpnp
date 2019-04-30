@@ -7,6 +7,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -60,13 +61,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
-    
-//    @Attribute(required = false)
-//    protected double xofs = 1.0;  
-//    
-//    @Attribute(required = false)
-//    protected double yofs = 1.0; 
-    
+
     String nozzleName = "0"; ///+
 
 
@@ -100,10 +95,10 @@ public class ReferenceBottomVision implements PartAlignment {
         }
     }
     
-    public Location getCameraLocationAtPartHeight(Part part, Camera camera, double angle) 
+    public Location getCameraLocationAtPartHeight(Part part, Camera camera, double angle)
     		throws Exception {
 
-    	double xofs = 0;
+    	double xofs = 0;   ///+
     	double yofs = 0;
     	switch (nozzleName) {
 	      	case "1": {
@@ -147,7 +142,7 @@ public class ReferenceBottomVision implements PartAlignment {
                 
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
-        final Location offsetZero = new Location(maxLinearOffset.getUnits());
+        final Location center = new Location(maxLinearOffset.getUnits());
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
@@ -182,16 +177,29 @@ public class ReferenceBottomVision implements PartAlignment {
                     break;
                 }
                 
-                // We not only check the center offset but also the corner offset brought about by the angular offset. 
-                Location corner = VisionUtils.getPixelCenterOffsets(camera, rect.size.width/2, rect.size.height/2);
-                if (offsetZero.getLinearDistanceTo(offsets) <= getMaxLinearOffset().getValue()
-                        && offsetZero.getLinearDistanceTo(corner)*Math.sin(Math.toRadians(Math.abs(angleOffset))) <=  getMaxLinearOffset().getValue()
-                        && Math.abs(angleOffset) <= getMaxAngularOffset()) {
+                // We not only check the center offset but also the corner offset brought about by the angular offset
+                // so a large part will react more sensitively to angular offsets.
+                Point corners[] = new Point[4];
+                rect.points(corners);
+                Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
+                        .convertToUnits(maxLinearOffset.getUnits());
+                Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
+                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                    Logger.debug("Offsets too large {} : center offset {} > {}", 
+                            offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue()); 
+                } 
+                else if (corner.getLinearDistanceTo(cornerWithAngularOffset) >  getMaxLinearOffset().getValue()) {
+                    Logger.debug("Offsets too large {} : corner offset {} > {}", 
+                            offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue()); 
+                }
+                else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
+                    Logger.debug("Offsets too large {} : angle offset {} > {}", 
+                            offsets, Math.abs(angleOffset), getMaxAngularOffset());
+                }
+                else {
                     // We have a good enough fix - go on with that.
                     break;
                 }
-
-                Logger.debug("Offsets too large {}", offsets);
 
                 // Not a good enough fix - try again with corrected position.
                 nozzle.moveTo(nozzleLocation);
@@ -382,22 +390,6 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setMaxAngularOffset(double maxAngularOffset) {
         this.maxAngularOffset = maxAngularOffset;
     }
-    
-//    public double getXofs() {
-//        return xofs2;
-//    }
-//
-//    public void setXofs(double xofs) {
-//        this.xofs = xofs;
-//    }  
-//    
-//    public double getYofs() {
-//        return yofs;
-//    }
-//
-//    public void setYofs(double yofs) {
-//        this.yofs = yofs;
-//    }  
 
     @Override
     public String getPropertySheetHolderTitle() {

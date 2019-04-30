@@ -116,6 +116,10 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         getDriver().moveTo(this, l, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
+    
+    @Override
+    public void home() throws Exception {
+    }
 
     @Override
     public Wizard getConfigurationWizard() {

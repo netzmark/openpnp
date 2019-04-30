@@ -181,7 +181,23 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
             dispenser.moveToSafeZ(speed);
         }
     }
-
+    
+    @Override
+    public void home() throws Exception {
+        for (Nozzle nozzle : nozzles) {
+            nozzle.home();
+        }
+        for (Camera camera : cameras) {
+            camera.home();
+        }
+        for (Actuator actuator : actuators) {
+            actuator.home();
+        }
+        for (PasteDispenser dispenser : pasteDispensers) {
+            dispenser.home();
+        }
+    }
+    
     @Override
     public String getName() {
         return name;

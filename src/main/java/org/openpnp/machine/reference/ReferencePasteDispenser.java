@@ -73,6 +73,10 @@ public class ReferencePasteDispenser extends AbstractPasteDispenser
         driver.moveTo(this, l, speed);
         machine.fireMachineHeadActivity(head);
     }
+    
+    @Override
+    public void home() throws Exception {
+    }
 
     @Override
     public Location getLocation() {

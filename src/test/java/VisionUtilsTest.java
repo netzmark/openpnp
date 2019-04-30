@@ -54,15 +54,21 @@ public class VisionUtilsTest {
 
         }
 
+
         @Override
         public void moveToSafeZ(double speed) throws Exception {
 
         }
 
         @Override
+        public void home() throws Exception {
+
+        }
+
+        @Override
         public Location getLocation() {
             return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
-        }
+}
 
         @Override
         public Wizard getConfigurationWizard() {
@@ -188,7 +194,7 @@ public class VisionUtilsTest {
         public void moveToSafeZ() throws Exception {
             moveToSafeZ(getHead().getMachine().getSpeed());
         }
-        
+       
         public double getXofs1() {  ///+
             return 0;
         }    
