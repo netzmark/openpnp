@@ -582,8 +582,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // calibrate nozzle after change
             if (nozzleTip != null) {
-                if (! nozzleTip.isCalibrated()) {
-                nozzleTip.calibrate();
+                if (!nozzleTip.isCalibrated()) {
                     Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
                     nozzleTip.calibrate();
                 }
