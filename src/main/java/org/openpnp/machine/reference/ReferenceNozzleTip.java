@@ -321,7 +321,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return getName().equals("unloaded")
                 || getName().equals("unmounted");
     }
-    
+
     public Calibration getCalibration() {
         return calibration;
     }
@@ -442,7 +442,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Location a = null, b = null;
                 
                 // angle asked for is the last in the table?
-            
+                
                 // Make sure the angle is between -180 and 180 - angles can get larger/smaller as +-180 if limitation to 180 degrees is disabled
                 while (angle < -180) {
                     angle += 360;
@@ -826,7 +826,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
            
             // This is our baseline location. Note: we do not apply the tool specific calibration offset here
             // as this would defy the very purpose of finding a new one here. 
-            //Nozzle nozzle = nozzleTip.getParentNozzle();
             String nozzleName = nozzle.getName();   ///+
             Location cameraLocation = camera.getLocation();
             
@@ -851,8 +850,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
       	  		} break;
       	  	}
             
+//            Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
+//                    .add(new Location(this.calibrationZOffset.getUnits(), xofs, yofs, this.calibrationZOffset.getValue(), 0));
+            
             Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
-                    .add(new Location(this.calibrationZOffset.getUnits(), xofs, yofs, this.calibrationZOffset.getValue(), 0));
+                    .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
             
             try {
                 calibrating = true;
@@ -960,7 +962,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             finally {
                 // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
-                nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, measureBaseLocation.getZ(), angleStop));
+                nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, null, angleStop)); //was measureBaseLocation.getZ()
                 
                 // after processing the nozzle returns to safe-z
                 nozzle.moveToSafeZ();

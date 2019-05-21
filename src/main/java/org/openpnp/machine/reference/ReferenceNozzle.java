@@ -143,17 +143,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
     
     @Override
-    public void prePickTest(Part part) throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
-        //Logger.debug("prePickTest void");
-        if (part == null) {
-            throw new Exception("Can't pick null part");
-        }
-        if (nozzleTip == null) {
-            throw new Exception("Can't pick, no nozzle tip loaded");
-        }
-        this.part = part;
-        getDriver().pick(this);
-        getMachine().fireMachineHeadActivity(head);
+    public void prePickTest() throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
         
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
@@ -162,14 +152,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel < (nt.getVacuumLevelPartOff()-50)) { //50 is offset, if it is >(Off-offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Pick failure: Vacuum level %f is lower than expected value of %f for part off. Part may be stuck to nozzle.",
+                        "Prepick test failure: Vacuum level %f is lower than expected value of %f for part off. Part may be stuck to nozzle.",
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
             else {
                 if (vacuumLevel > (nt.getVacuumLevelPartOff()+50)) { //50 is offset, if it is >(Off+offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Pick failure: Vacuum level %f is higher than expected value of %f for part off. Part may be stuck to nozzle.",
+                        "Prepick test failure: Vacuum level %f is higher than expected value of %f for part off. Part may be stuck to nozzle.",
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }

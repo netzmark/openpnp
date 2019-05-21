@@ -250,48 +250,6 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         initDataBindings();
 
     }
-
-
-
-//        @Override
-//        public void actionPerformed(ActionEvent arg0) {
-//            UiUtils.submitUiMachineTask(() -> {
-//                HeadMountable nozzle = nozzleTip.getParentNozzle();
-//                Camera camera = VisionUtils.getBottomVisionCamera();
-//                Location location = camera.getLocation();
-//                String nozzleName = nozzle.getName();
-//                
-//          	double xofs = 0;
-//          	double yofs = 0;
-//          	switch (nozzleName) {
-//      	      	case "1": {
-//      	      		xofs=camera.getXofs1();
-//      	      		yofs=camera.getYofs1();
-//      	      	} break;
-//      	  		case "2": {
-//      	  			xofs=camera.getXofs2();
-//      	  			yofs=camera.getYofs2();
-//      	  		} break;
-//      	  		case "3": {
-//      	  			xofs=camera.getXofs3();
-//      	  			yofs=camera.getYofs3();
-//      	  		} break;
-//      	  		default: {
-//      	  			xofs=0.;
-//      	  			yofs=0.;
-//      	  		} break;
-//      	  	}
-//          	
-//            location = camera.getLocation()
-//                    .add(new Location(location
-//                            .getUnits(),
-//                            xofs, yofs, 0, 0))
-//                    .derive(null, null, null, null);               
-//                
-//                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-//            });
-//        }
-//    };
     
     @SuppressWarnings("serial")
     private Action positionToolAction = new AbstractAction("Position Tool", Icons.centerTool) {
@@ -304,7 +262,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable nozzle = nozzleTip.getParentNozzle();
                 Camera camera = VisionUtils.getBottomVisionCamera();
-    //                
+                
                 String nozzleName = nozzle.getName();
                
           	double xofs = 0;
@@ -331,7 +289,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), xofs, yofs, 
                                 nozzleTip.getCalibration().getCalibrationZOffset().getValue(), 0));
-    //
+
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             });
         }

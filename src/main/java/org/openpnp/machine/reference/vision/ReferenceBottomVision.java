@@ -95,8 +95,8 @@ public class ReferenceBottomVision implements PartAlignment {
         }
     }
     
-    public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle)
-    		throws Exception {
+    public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) {
+//    		throws Exception {
 
     	double xofs = 0;   ///+
     	double yofs = 0;
@@ -122,7 +122,7 @@ public class ReferenceBottomVision implements PartAlignment {
         return camera.getLocation(nozzle)
                 .add(new Location(part.getHeight()
                         .getUnits(),
-                        xofs, yofs, part.getHeight()
+                        0.0, 0.0, part.getHeight() //xofs, yofs, part.getHeight()
                         .getValue(),
                         0.0))
                 .derive(null, null, null, angle);

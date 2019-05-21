@@ -23,8 +23,9 @@ public interface Nozzle
      * Commands the Nozzle to perform wether the nozzle is empty just before the pick procedure. 
      * @throws Exception
      */	
-    public void prePickTest(Part part) throws Exception;
-
+//    public void prePickTest(Part part) throws Exception;
+    public void prePickTest() throws Exception;
+    
     /**
      * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning
      * on the vacuum. When this is called during job processing the processor will have already

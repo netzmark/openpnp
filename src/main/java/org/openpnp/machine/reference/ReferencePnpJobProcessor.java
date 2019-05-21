@@ -712,6 +712,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                lastError = e;
            }
         }
+        
+      Logger.debug("prePickTest");
+      nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
 
                // Pick the part
         Feeder feeder = plannedPlacement.feeder;
@@ -724,9 +727,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    new Object[] {part, feeder, nozzle});
 
            // Move to the pick location
-           Logger.debug("prePickTest");
-           nozzle.prePickTest(part); //this is the procedure to check before the pick whether the nozzle is empty
-           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+          MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
 
           // Pick
           nozzle.pick(part);
