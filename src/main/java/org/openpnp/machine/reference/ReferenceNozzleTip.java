@@ -738,6 +738,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         private double angleStart = -180;
         @Attribute(required = false)
         private double angleStop = 180;
+        // The excenter radius as a ratio of the camera minimum dimension.  
+        @Attribute(required = false)
+        private double excenterRatio = 0.25;
         
         @Attribute(required = false)
         private boolean enabled;
@@ -805,8 +808,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             
             if (!(homing || Configuration.get().getMachine().isHomed())) {
-                Logger.trace("[nozzleTipCalibration]Machine not yet homed, nozzle tip calibration request aborted");
-                return;
+                throw new Exception("Machine not yet homed, nozzle tip calibration request aborted");
             }
             
             ReferenceNozzle nozzle = (ReferenceNozzle)nozzleTip.getParentNozzle();
@@ -867,8 +869,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         throw new Exception("For calibration the bottom vision camera must be a ReferenceCamera."); 
                     }
                     referenceCamera.setRotation(0.);
-                    excenter = VisionUtils.getPixelCenterOffsets(camera, 
-                            camera.getWidth()/2 + Math.min(camera.getWidth(), camera.getHeight())*0.25, 
+                    excenter = VisionUtils.getPixelCenterOffsets(camera,
+                    		camera.getWidth()/2 + Math.min(camera.getWidth(), camera.getHeight())*excenterRatio,
                             camera.getHeight()/2);
                 }
                 
@@ -954,10 +956,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                             cameraCompensation.getPhaseShift(),
                             newCameraAngle);
                     referenceCamera.setRotation(newCameraAngle);
-                    if (this.runoutCompensationAlgorithm != RunoutCompensationAlgorithm.ModelNoOffset) {
-                        // the calibration has become invalid
-                        reset();
-                    }
                 }
             }
             finally {
@@ -974,6 +972,21 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 firePropertyChange("runoutCompensationInformation", null, null);
             }
         }
+
+        public static void resetAllNozzleTips() {
+            // reset all nozzle tip calibrations, as they have become invalid
+            for (Head head : Configuration.get().getMachine().getHeads()) {
+                for (Nozzle nozzle  : head.getNozzles()) {
+                    for (NozzleTip nt : nozzle.getNozzleTips()) {
+                        if (nt instanceof ReferenceNozzleTip) {
+                            ReferenceNozzleTip rnt = (ReferenceNozzleTip)nt;
+                            // the calibration has become invalid
+                            rnt.getCalibration().reset();
+                        }
+                    }
+                }
+            }
+        }      
         
         public void calibrate(ReferenceNozzleTip nozzleTip) throws Exception {
             calibrate(nozzleTip, false, false);

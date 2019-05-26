@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -156,6 +157,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
     protected List<PlannedPlacement> plannedPlacements = new ArrayList<>();
+    
+    protected Set<BoardLocation> completedFidChecks = new HashSet<>();
     
     long startTime;
     int totalPartsPlaced;
@@ -348,6 +351,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.machine = Configuration.get().getMachine();
         this.head = this.machine.getDefaultHead();
         this.jobPlacements.clear();
+        this.completedFidChecks.clear();
         
 
         fireTextStatus("Checking job for setup errors.");
@@ -463,8 +467,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (!boardLocation.isCheckFiducials()) {
                 continue;
             }
+            if (completedFidChecks.contains(boardLocation)) {
+                continue;
+            }
             locator.locateBoard(boardLocation);
             Logger.debug("Fiducial check for {}", boardLocation);
+            completedFidChecks.add(boardLocation);
         }
     }
     

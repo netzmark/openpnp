@@ -225,6 +225,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     @Override
     public void setHeadOffsets(Location headOffsets) {
         this.headOffsets = headOffsets;
+        viewHasChanged();
     }
 
     @Override
@@ -248,12 +249,20 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
     public void home() throws Exception {
     }
 
+    protected void viewHasChanged() {
+        if (this.getLooking() == Looking.Up) {
+            // Changing an up-looking camera view invalidates the nozzle tip calibration.
+            ReferenceNozzleTip.Calibration.resetAllNozzleTips();
+        }
+    }
+    
     public double getRotation() {
         return rotation;
     }
 
     public void setRotation(double rotation) {
         this.rotation = rotation;
+        viewHasChanged();
     }
 
     public boolean isFlipX() {
@@ -262,6 +271,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setFlipX(boolean flipX) {
         this.flipX = flipX;
+        viewHasChanged();
     }
 
     public boolean isFlipY() {
@@ -270,6 +280,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setFlipY(boolean flipY) {
         this.flipY = flipY;
+        viewHasChanged();
     }
 
     public int getOffsetX() {
@@ -278,6 +289,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setOffsetX(int offsetX) {
         this.offsetX = offsetX;
+        viewHasChanged();
     }
     
     public double getXofs1() { ///+
@@ -334,6 +346,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setOffsetY(int offsetY) {
         this.offsetY = offsetY;
+        viewHasChanged();
     }
 
     public int getCropWidth() {
@@ -342,6 +355,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setCropWidth(int cropWidth) {
         this.cropWidth = cropWidth;
+        viewHasChanged();
     }
 
     public int getCropHeight() {
@@ -350,6 +364,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setCropHeight(int cropHeight) {
         this.cropHeight = cropHeight;
+        viewHasChanged();
     }
 
     public int getScaleWidth() {
@@ -358,6 +373,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setScaleWidth(int scaleWidth) {
         this.scaleWidth = scaleWidth;
+        viewHasChanged();
     }
 
     public int getScaleHeight() {
@@ -366,6 +382,7 @@ public abstract class ReferenceCamera extends AbstractCamera implements Referenc
 
     public void setScaleHeight(int scaleHeight) {
         this.scaleHeight = scaleHeight;
+        viewHasChanged();
     }
     
     public boolean isDeinterlace() {
