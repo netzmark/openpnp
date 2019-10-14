@@ -133,21 +133,23 @@ public class JogControlsPanel extends JPanel {
         if (units == LengthUnit.Millimeters) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
             incrementsLabels.put(1, new JLabel("0.01")); //$NON-NLS-1$
-            incrementsLabels.put(2, new JLabel("0.1")); //$NON-NLS-1$
-            incrementsLabels.put(3, new JLabel("1.0")); //$NON-NLS-1$
-            incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("90")); //$NON-NLS-1$			
-            incrementsLabels.put(6, new JLabel("100")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.05")); //$NON-NLS-1$
+            incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("10")); //$NON-NLS-1$
+            incrementsLabels.put(6, new JLabel("90")); //$NON-NLS-1$			
+            incrementsLabels.put(7, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else if (units == LengthUnit.Inches) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
             incrementsLabels.put(1, new JLabel("0.001")); //$NON-NLS-1$
-            incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
-            incrementsLabels.put(3, new JLabel("0.1")); //$NON-NLS-1$
-            incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
-            incrementsLabels.put(5, new JLabel("90")); //$NON-NLS-1$
-            incrementsLabels.put(6, new JLabel("10")); //$NON-NLS-1$
+            incrementsLabels.put(2, new JLabel("0.005")); //$NON-NLS-1$            
+            incrementsLabels.put(3, new JLabel("0.01")); //$NON-NLS-1$
+            incrementsLabels.put(4, new JLabel("0.1")); //$NON-NLS-1$
+            incrementsLabels.put(5, new JLabel("1.0")); //$NON-NLS-1$
+            incrementsLabels.put(6, new JLabel("90")); //$NON-NLS-1$
+            incrementsLabels.put(7, new JLabel("10")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else {
@@ -158,20 +160,28 @@ public class JogControlsPanel extends JPanel {
 
     public double getJogIncrement() {
         if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
-            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 ) {
+            if (sliderIncrements.getValue()==1) {
             	return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1); }
-            else if (sliderIncrements.getValue()==5 ) {
+            else if (sliderIncrements.getValue()==2 ) {
+                return 0.05; }            
+            else if (sliderIncrements.getValue()>=3 && sliderIncrements.getValue()<=5) {
+            	return 0.01 * Math.pow(10, sliderIncrements.getValue() - 2); }           
+            else if (sliderIncrements.getValue()==6 ) {
                 return 90.0; }
             else {
-                return 0.01 * Math.pow(10, sliderIncrements.getValue() - 2); }
+                return 0.01 * Math.pow(10, sliderIncrements.getValue() - 3); }
         }
         else if (configuration.getSystemUnits() == LengthUnit.Inches) {
-            if (sliderIncrements.getValue()>=1 && sliderIncrements.getValue()<=4 ) {
+            if (sliderIncrements.getValue()>=1) {
             	return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1); }
-            else if (sliderIncrements.getValue()==4 ) {
+            else if (sliderIncrements.getValue()==2 ) {
+                return 0.005; }            
+            else if (sliderIncrements.getValue()>=3 && sliderIncrements.getValue()<=5) {
+            	return 0.001 * Math.pow(10, sliderIncrements.getValue() - 2); }             
+            else if (sliderIncrements.getValue()==6 ) {
             	return 90.0; }
             else {
-            	return 0.001 * Math.pow(10, sliderIncrements.getValue() - 2); }
+            	return 0.001 * Math.pow(10, sliderIncrements.getValue() - 3); }
         }
         else {
             throw new Error(
@@ -360,7 +370,7 @@ public class JogControlsPanel extends JPanel {
         sliderIncrements.setSnapToTicks(true);
         sliderIncrements.setPaintLabels(true);
         sliderIncrements.setMinimum(1);
-        sliderIncrements.setMaximum(6);
+        sliderIncrements.setMaximum(7); // slider steps
 
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);

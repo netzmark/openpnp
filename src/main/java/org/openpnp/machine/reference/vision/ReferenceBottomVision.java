@@ -136,7 +136,7 @@ public class ReferenceBottomVision implements PartAlignment {
             wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();
         }
-        wantedAngle = angleNorm(wantedAngle, 180.);
+        // wantedAngle = angleNorm(wantedAngle, 180.); // commented for the test
         // Wanted location.
         Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
                 
