@@ -13,7 +13,8 @@ with (imports) {
               '<cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true"/>' +
 		      '<cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="1" enabled="true" kernel-size="15"/>' +
 		      '<cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="2" enabled="true" prefix="bv_source_" suffix=".png"/>' +
-		'</cv-pipeline>';
+		   '</stages>' +
+			  '</cv-pipeline>';
 
 		var pipeline = new CvPipeline(xml);
 
