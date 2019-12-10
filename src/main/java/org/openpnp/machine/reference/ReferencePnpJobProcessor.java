@@ -721,8 +721,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
            }
         }
         
-      //Logger.debug("prePickTest");
-      //nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
+      Logger.debug("prePickTest");
+      nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
 
                // Pick the part
         Feeder feeder = plannedPlacement.feeder;
@@ -735,21 +735,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    new Object[] {part, feeder, nozzle});
 
            // Move to the pick location
-          Logger.debug("test1, move to the pick location");                  
-          //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-          MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
-          
-          Logger.debug("prePickTest");
-          nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
-          
-          MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
-          Logger.debug("test4, nozzle is lowered");
-          
+          MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+
           // Pick
           nozzle.pick(part);
 
           // Retract
-          nozzle.moveToSafeZ();
+          nozzle.moveToSafeZ(); //||
           fireTextStatus("Picked %s from %s for %s.", part.getId(),
           feeder.getName(), placement.getId());
           Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
@@ -947,21 +939,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
                     0, part.getHeight().getValue(), 0));
 
-//            try {
-//                HashMap<String, Object> params = new HashMap<>();
-//                params.put("job", job);
-//                params.put("jobProcessor", this);
-//                params.put("part", part);
-//                params.put("nozzle", nozzle);
-//                params.put("placement", placement);
-//                params.put("boardLocation", boardLocation);
-//                params.put("placementLocation", placementLocation);
-//                params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
-//            Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
-//            }
-//            catch (Exception e) {
-//                Logger.warn(e);
-//            }
+            try {
+                HashMap<String, Object> params = new HashMap<>();
+                params.put("job", job);
+                params.put("jobProcessor", this);
+                params.put("part", part);
+                params.put("nozzle", nozzle);
+                params.put("placement", placement);
+                params.put("boardLocation", boardLocation);
+                params.put("placementLocation", placementLocation);
+                params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
+            Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
             
             // Move to the placement location
             MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
@@ -984,20 +976,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             plannedPlacement.stepComplete = true;
 
-//            try {
-//                HashMap<String, Object> params = new HashMap<>();
-//                params.put("job", job);
-//                params.put("jobProcessor", this);
-//                params.put("part", part);
-//                params.put("nozzle", nozzle);
-//                params.put("placement", placement);
-//                params.put("boardLocation", boardLocation);
-//                params.put("placementLocation", placementLocation);
-//                Configuration.get().getScripting().on("Job.Placement.Complete", params);
-//            }
-//            catch (Exception e) {
-//                Logger.warn(e);
-//            }
+            try {
+                HashMap<String, Object> params = new HashMap<>();
+                params.put("job", job);
+                params.put("jobProcessor", this);
+                params.put("part", part);
+                params.put("nozzle", nozzle);
+                params.put("placement", placement);
+                params.put("boardLocation", boardLocation);
+                params.put("placementLocation", placementLocation);
+                Configuration.get().getScripting().on("Job.Placement.Complete", params);
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
             
             Logger.debug("Place {} with {}", part, nozzle.getName());
 

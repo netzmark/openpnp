@@ -223,7 +223,7 @@ public class VisionUtils {
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("part", part);
                 globals.put("nozzle", nozzle);
-                globals.put("offsets", offsets);
+                globals.put("offset", offsets);
                 Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
             }
             catch (Exception e) {

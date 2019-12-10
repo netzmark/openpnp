@@ -9,7 +9,6 @@ import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 
 import org.opencv.core.Mat;
-import org.opencv.core.RotatedRect;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -282,6 +281,5 @@ public abstract class CvStage {
                         + height + ", score=" + score + "]";
             }
         }
-       
     }
 }

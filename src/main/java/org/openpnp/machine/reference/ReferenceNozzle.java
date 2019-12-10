@@ -161,7 +161,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             else {
                 if (vacuumLevel > (nt.getVacuumLevelPartOff()+50)) { //50 is offset, if it is >(Off+offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Prepick test failure: Vacuum level %f is higher than expected value of %f (+50) for part off. Part may be stuck to nozzle.",
+                        "Prepick test failure: Vacuum level %f is higher than expected value of %f for part off. Part may be stuck to nozzle.",
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
@@ -195,7 +195,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         getDriver().pick(this);
         getMachine().fireMachineHeadActivity(head);
 
-        //actDown.actuate(true); //lowering nozzle before makePick. Removed because the system made it automatically before
+        //actDown.actuate(true); //lowering nozzle before makePick. Removed because the system made it automaticaly before
 
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
 
@@ -226,11 +226,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if(actDown!=null) {
                 Logger.debug("{}.moveTo(Nozzle Up)", getId());
                 actDown.actuate(false); //rising nozzle immediately after the VacuumLevelPartOn value detected or full loop finished
-                Logger.debug("pickDwellTime after nozzle raising: {}ms", (getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds()));
+                Logger.debug("pickDwellTime between checks: {}ms", (getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds()));
                 Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
             }
 
-    // Second vacuum check (after nozzle rising)
+    // Second vacuum check (after nozzle rising), single check is enough to confirm whether the part is not dropped)
             vacuumLevel = Double.parseDouble(actuator.read());
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel > nt.getVacuumLevelPartOn()) {
@@ -240,67 +240,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 }
             }
             else {
-//                if (vacuumLevel < nt.getVacuumLevelPartOn()) {
-//                    throw new Exception(String.format(
-//                        "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//                         vacuumLevel, nt.getVacuumLevelPartOn()));
-//                }
-            
-            	
-            	
-              if (vacuumLevel > nt.getVacuumLevelPartOn()) {
-                  Logger.debug("Vacuum level is {} and it is more than VacuumLevelPartOn {} - it means the part is picked successfully", vacuumLevel, nt.getVacuumLevelPartOn());
-              }
-              else {
-            	  throw new Exception(String.format(
-            			  "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-            			  vacuumLevel, nt.getVacuumLevelPartOn()));
-              }
-                   	
-            	
-            	
-            	
-            	
-            	
-//        		double vacuumLevel2;
-//    			vacuumLevel2 = Double.parseDouble(actuator.read());
-//        		if ( (vacuumLevel2 < (vacuumLevel - 5)) || (vacuumLevel2 < nt.getVacuumLevelPartOn()) ) {
-//            		throw new Exception(String.format(
-//            				"Pick failure: After raising Vacuum level2 %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//            				vacuumLevel, nt.getVacuumLevelPartOn()));
-//        		}
-//    			
-//    			
-//    			
-//            	if (vacuumLevel < nt.getVacuumLevelPartOn()) {
-//            		throw new Exception(String.format(
-//            				"Pick failure: After raising Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//            				vacuumLevel, nt.getVacuumLevelPartOn()));
-//            	}
-//            	else {
-//                	Thread.sleep(10);
-//            		int times2=20;
-//            		double vacuumLevel2;
-//
-//            		while(times2-->0) {
-//            			vacuumLevel2 = Double.parseDouble(actuator.read());
-//                        if (vacuumLevel2  < (vacuumLevel - 5)) { break; }
-//                            else {
-//                            	Thread.sleep(10); 
-//                                Logger.debug("waiting 10ms");
-//                                }
-//                    };
-//                    
-//                    
-//            		//Thread.sleep(nozzleTip.getPickDwellMilliseconds());
-//            		vacuumLevel2 = Double.parseDouble(actuator.read());
-//            		if ( (vacuumLevel2 < (vacuumLevel - 5)) || (vacuumLevel2 < nt.getVacuumLevelPartOn()) ) {
-//                		throw new Exception(String.format(
-//                				"Pick failure: After raising Vacuum level2 %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//                				vacuumLevel, nt.getVacuumLevelPartOn()));
-//            		}
-//            	}
-
+                if (vacuumLevel < nt.getVacuumLevelPartOn()) {
+                    throw new Exception(String.format(
+                        "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
+                         vacuumLevel, nt.getVacuumLevelPartOn()));
+                }
             }
         }
     }
@@ -365,8 +309,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
 
     // Second vacuum check (after nozzle rising), single check is enough to confirm whether the part is not glued)
-            /*
-            vacuumLevel = Double.parseDouble(actuator.read());
+             vacuumLevel = Double.parseDouble(actuator.read());
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel < nt.getVacuumLevelPartOff()) {
                     throw new Exception(String.format(
@@ -381,7 +324,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                             vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
-             */   
         }
     }
     
@@ -486,11 +428,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         //Marek change: section below is to fire actuator for pneumatic head control in relation to Z location (change at -2)
         if(actDown!=null) {
         	if(location.getZ()<-2 && currentLocation.getZ() >=-2) {
-                Logger.debug("{}.moveTo(Nozzle Down)", getId());
+                Logger.debug("TEST #101: {}.moveTo(Nozzle Down)", getId());
                 actDown.actuate(true);
         	}
             if(location.getZ()>=-2 && currentLocation.getZ() <-2) {
-                Logger.debug("{}.moveTo(Nozzle Up)", getId());
+                Logger.debug("TEST #102: {}.moveTo(Nozzle Up)", getId());
                 actDown.actuate(false);
             }
         }
