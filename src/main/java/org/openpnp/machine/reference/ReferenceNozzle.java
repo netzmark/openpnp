@@ -227,11 +227,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 Logger.debug("{}.moveTo(Nozzle Up)", getId());
                 actDown.actuate(false); //rising nozzle immediately after the VacuumLevelPartOn value detected or full loop finished
                 Logger.debug("pickDwellTime after nozzle raising: {}ms", (getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds()));
-                Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+                //Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
             }
 
     // Second vacuum check (after nozzle rising)
-            vacuumLevel = Double.parseDouble(actuator.read());
+            vacuumLevel = (Double.parseDouble(actuator.read()) -5);
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel > nt.getVacuumLevelPartOn()) {
                     throw new Exception(String.format(
@@ -240,67 +240,26 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 }
             }
             else {
-//                if (vacuumLevel < nt.getVacuumLevelPartOn()) {
-//                    throw new Exception(String.format(
-//                        "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//                         vacuumLevel, nt.getVacuumLevelPartOn()));
-//                }
-            
+              if (vacuumLevel < nt.getVacuumLevelPartOn()) {
+              throw new Exception(String.format(
+                  "Pick failure: Vacuum level %f (incl. -5 offset) is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
+                   vacuumLevel, nt.getVacuumLevelPartOn()));
+              }
+      
+          	double vacuumLevel2;
+            Thread.sleep(nozzleTip.getPickDwellMilliseconds());
+  			Logger.debug("programmable pause: {}", nozzleTip.getPickDwellMilliseconds());
+     			
+           	vacuumLevel2 = Double.parseDouble(actuator.read());	
             	
-            	
-              if (vacuumLevel > nt.getVacuumLevelPartOn()) {
+              if (vacuumLevel2 >= vacuumLevel) {
                   Logger.debug("Vacuum level is {} and it is more than VacuumLevelPartOn {} - it means the part is picked successfully", vacuumLevel, nt.getVacuumLevelPartOn());
               }
               else {
             	  throw new Exception(String.format(
-            			  "Pick failure: Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-            			  vacuumLevel, nt.getVacuumLevelPartOn()));
-              }
-                   	
-            	
-            	
-            	
-            	
-            	
-//        		double vacuumLevel2;
-//    			vacuumLevel2 = Double.parseDouble(actuator.read());
-//        		if ( (vacuumLevel2 < (vacuumLevel - 5)) || (vacuumLevel2 < nt.getVacuumLevelPartOn()) ) {
-//            		throw new Exception(String.format(
-//            				"Pick failure: After raising Vacuum level2 %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//            				vacuumLevel, nt.getVacuumLevelPartOn()));
-//        		}
-//    			
-//    			
-//    			
-//            	if (vacuumLevel < nt.getVacuumLevelPartOn()) {
-//            		throw new Exception(String.format(
-//            				"Pick failure: After raising Vacuum level %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//            				vacuumLevel, nt.getVacuumLevelPartOn()));
-//            	}
-//            	else {
-//                	Thread.sleep(10);
-//            		int times2=20;
-//            		double vacuumLevel2;
-//
-//            		while(times2-->0) {
-//            			vacuumLevel2 = Double.parseDouble(actuator.read());
-//                        if (vacuumLevel2  < (vacuumLevel - 5)) { break; }
-//                            else {
-//                            	Thread.sleep(10); 
-//                                Logger.debug("waiting 10ms");
-//                                }
-//                    };
-//                    
-//                    
-//            		//Thread.sleep(nozzleTip.getPickDwellMilliseconds());
-//            		vacuumLevel2 = Double.parseDouble(actuator.read());
-//            		if ( (vacuumLevel2 < (vacuumLevel - 5)) || (vacuumLevel2 < nt.getVacuumLevelPartOn()) ) {
-//                		throw new Exception(String.format(
-//                				"Pick failure: After raising Vacuum level2 %f is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
-//                				vacuumLevel, nt.getVacuumLevelPartOn()));
-//            		}
-//            	}
-
+            			  "Pick failure: Vacuum level2 %f is lower than Vacuum level %f measured after raising. Part may have failed to pick or feeder is empty.",
+            			  vacuumLevel2, vacuumLevel));
+              	}
             }
         }
     }
