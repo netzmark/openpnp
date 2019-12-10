@@ -77,7 +77,8 @@ public class Helpers {
     	 }
     	 
          table.clearSelection();
-         if (++index > table.getModel().getRowCount() - 1){
+         //if (++index > table.getModel().getRowCount() - 1){
+         if (++index > table.getRowCount() - 1){
          	index = 0;
          }
          
