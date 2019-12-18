@@ -990,7 +990,7 @@ public class JobPanel extends JPanel {
                 // to Stepping.
                 if (state == State.Running) {
                     try {
-                        ReferencePnpJobProcessor.doTopLightOn();
+                        ReferencePnpJobProcessor.doTopLightOn();  //turn light at the Job pausing with Dialogue Pause button
                     	Logger.debug("Job error dialog choose: pause"); //TOP LIGHT ON
                     	setState(State.Paused);
                     }
@@ -1097,18 +1097,18 @@ public class JobPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
                 if (state == State.Stopped) {
                     setState(State.Running);
-                    ReferencePnpJobProcessor.doTopLightOn();
+                    ReferencePnpJobProcessor.doTopLightOn(); //turn light at the Job starting
                     jobStart();
                 }
                 else if (state == State.Paused) {
                     setState(State.Running);
-                    ReferencePnpJobProcessor.doTopLightOff();
+                    ReferencePnpJobProcessor.doTopLightOff(); //turn light at the Job releasing from Pause
                     jobRun();
                 }
                 // If we're running and the user hits pause we pause.
                 else if (state == State.Running) {
                     setState(State.Pausing);
-                    ReferencePnpJobProcessor.doTopLightOn();
+                    ReferencePnpJobProcessor.doTopLightOn(); //turn light at the Job pausing with Pause main button
                 }
                 else {
                     throw new Exception("Don't know how to change from state " + state);

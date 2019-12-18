@@ -73,7 +73,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     Actuator actDown; // Marek change: machine is faster, but need program restart if name changes.
     Actuator actVacuum; // Marek change: machine is faster, but need program restart if name changes.
-    public static Actuator topLight; // Marek change: machine is faster, but need program restart if name changes.
+    //public static Actuator topLight; // Marek change: machine is faster, but need program restart if name changes.
     
     public ReferenceNozzle() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -83,7 +83,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 actDown = getHead().getMachine().getActuator(getId()); // Marek change: actuator added to can control lower/raise Nozzle from RefferenceNozzle
                 actVacuum = getHead().getMachine().getActuator(getId()+"_VAC"); // Marek change: actuator added to can control vacuum on/off from RefferenceNozzle
                 //topLight = getMachine().getActuator("DownCamLights"); // Marek change: actuator added to can control Light of Down Looking Camera from ReferencePnpJobProcessor
-                topLight = getMachine().getActuatorByName("DownCamLights"); // Marek change: actuator added to can control Light of Down Looking Camera from ReferencePnpJobProcessor
+                //topLight = getMachine().getActuatorByName("DownCamLights"); // Marek change: actuator added to can control Light of Down Looking Camera from ReferencePnpJobProcessor
             }
         });
     }
@@ -234,6 +234,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 actDown.actuate(false); //rising nozzle immediately after the VacuumLevelPartOn value detected or full loop finished
                 Logger.debug("pickDwellTime after nozzle raising: {}ms", (getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds()));
                 //Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+                Thread.sleep(this.getPickDwellMilliseconds()); //Artur wanted have it here
             }
 
     // Second vacuum check (after nozzle rising)

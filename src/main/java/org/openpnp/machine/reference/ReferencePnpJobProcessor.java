@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.openpnp.gui.JogControlsPanel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
@@ -448,17 +450,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     public static boolean topLightFlag = false;
     public static void doTopLightOn() throws Exception { // top light control added
-        if (ReferenceNozzle.topLight!=null && !topLightFlag) {
+        if (JogControlsPanel.topLight!=null && !topLightFlag) {
         	Logger.debug("Turning on the light of Downlooking Camera");
-        	ReferenceNozzle.topLight.actuate(true);
+        	JogControlsPanel.topLight.actuate(true);
         	topLightFlag = true;
         }
     }
         	
     public static void doTopLightOff() throws Exception { // top light control added        	
-    	if (ReferenceNozzle.topLight!=null && topLightFlag) {
+    	if (JogControlsPanel.topLight!=null && topLightFlag) {
     		Logger.debug("Turning off the light of Downlooking Camera");        	
-        	ReferenceNozzle.topLight.actuate(false);
+    		JogControlsPanel.topLight.actuate(false);
         	topLightFlag = false;
     	}
     }
@@ -466,8 +468,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     protected void doFiducialCheck() throws Exception {
         fireTextStatus("Performing fiducial checks.");
+        doTopLightOn();  //it's for any case if the "fiducialing" could be manually repeated.
 
-        doTopLightOn();
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
         if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
@@ -498,9 +500,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     protected void doIndividualFiducialCheck(BoardLocation boardLocation) throws Exception {
         fireTextStatus("Performing individual fiducial check.");
-        
-        doTopLightOn();
-        Logger.debug("Turning doPlan");
+        doTopLightOn(); //it's for any case if the "fiducialing" could be manually repeated.
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
@@ -538,9 +538,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         plannedPlacements.clear();
 
         fireTextStatus("Planning placements.");
-        
-        doTopLightOff();
-        Logger.debug("doPlan");
+        doTopLightOff(); //not necessary as should be already off - but for any case to avoid the fuck up the pipeline.
 
         List<JobPlacement> jobPlacements;
 
@@ -762,7 +760,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                    new Object[] {part, feeder, nozzle});
 
            // Move to the pick location
-          Logger.debug("test1, move to the pick location");                  
+          Logger.debug("move to the pick location");                  
           //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
           
@@ -770,7 +768,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
           nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
           
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
-          Logger.debug("test4, nozzle is lowered");
           
           // Pick
           nozzle.pick(part);
@@ -1064,6 +1061,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         fireTextStatus("Job finished: Placed %s parts in %s sec (%s CPH). Fixed %s parts.", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)), totalPartsSkipped);
         doTopLightOn();
+ 
         saveJobAndConfig(true);
     }
     

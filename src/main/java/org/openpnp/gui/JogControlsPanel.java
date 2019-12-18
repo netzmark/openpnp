@@ -755,22 +755,23 @@ public class JogControlsPanel extends JPanel {
             });
         }
     };
-
+    
+    public static Actuator topLight;
     @SuppressWarnings("serial")
     public Action topLightAction = new AbstractAction("LIGHT") {
-    	//boolean topLightFlag = false;
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	Actuator actuator = ReferenceNozzle.topLight;
+        	//Actuator actuator = ReferenceNozzle.topLight;
+        	topLight = Configuration.get().getMachine().getActuatorByName("DownCamLights");
         	
-        	if (actuator != null)	{
+        	if (topLight != null)	{
         		try {
         			if(!ReferencePnpJobProcessor.topLightFlag) {
-        				actuator.actuate(true);
+        				topLight.actuate(true);
         				ReferencePnpJobProcessor.topLightFlag = true;
         			}
         			else {
-        				actuator.actuate(false);
+        				topLight.actuate(false);
         				ReferencePnpJobProcessor.topLightFlag = false;	
         			}
         		}
