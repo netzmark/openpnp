@@ -50,6 +50,8 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.WrapLayout;
+import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -65,6 +67,9 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PasteDispenser;
+import org.openpnp.spi.base.AbstractJobProcessor;
+import org.openpnp.spi.base.AbstractPnpJobProcessor;
+
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -119,6 +124,7 @@ public class JogControlsPanel extends JPanel {
         zParkAction.setEnabled(enabled);
         cParkAction.setEnabled(enabled);
         botAction.setEnabled(enabled);
+        topLightAction.setEnabled(enabled);
         machineControlsPanel.vacOffAction.setEnabled(enabled);
         machineControlsPanel.vacOnAction.setEnabled(enabled);
         for (Component c : panelActuators.getComponents()) {
@@ -402,7 +408,7 @@ public class JogControlsPanel extends JPanel {
         positionNozzleBtn.setIcon(Icons.centerTool);
         positionNozzleBtn.setHideActionText(true);
         positionNozzleBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionSelectedNozzle"));
-        panelControls.add(positionNozzleBtn, "22, 4"); //$NON-NLS-1$
+        panelControls.add(positionNozzleBtn, "22, 2"); //$NON-NLS-1$
 
         JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
         buttonStartStop.setIcon(Icons.powerOn);
@@ -437,12 +443,16 @@ public class JogControlsPanel extends JPanel {
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
         positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera"));
-        panelControls.add(positionCameraBtn, "22, 6"); //$NON-NLS-1$
+        panelControls.add(positionCameraBtn, "22, 4"); //$NON-NLS-1$
+        
         JButton btnBot = new JButton(botAction);
-        panelControls.add(btnBot, "22, 8");
+        panelControls.add(btnBot, "22, 6");  //$NON-NLS-1$
+        
+        JButton btnTopLight = new JButton(topLightAction);
+        panelControls.add(btnTopLight, "22, 12");  //$NON-NLS-1$
 
         JButton btnVacOn = new JButton(machineControlsPanel.vacOnAction);
-        panelControls.add(btnVacOn, "2, 10");
+        panelControls.add(btnVacOn, "2, 10");  //$NON-NLS-1$
 
         JButton btnVacOff = new JButton(machineControlsPanel.vacOffAction);
         panelControls.add(btnVacOff, "2, 12");
@@ -463,6 +473,7 @@ public class JogControlsPanel extends JPanel {
         JButton clockwiseButton = new JButton(cMinusAction);
         clockwiseButton.setHideActionText(true);
         panelControls.add(clockwiseButton, "10, 12"); //$NON-NLS-1$
+        
         JButton btnDump = new JButton(discardAction);
         panelControls.add(btnDump, "14, 12");
 
@@ -736,9 +747,36 @@ public class JogControlsPanel extends JPanel {
                                                                         .getMachine()
                                                                         .getDiscardLocation());
                 // discard the part
-                nozzle.place();
+
+                //AbstractPnpJobProcessor.discard(nozzle);
+                nozzle.place(); //I don't use Abstract because don't want to check whether there is something picked up before
+                //actVacuum = getHead().getMachine().getActuator(getId()+"_VAC")
                 nozzle.moveToSafeZ();
             });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action topLightAction = new AbstractAction("LIGHT") {
+    	//boolean topLightFlag = false;
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        	Actuator actuator = ReferenceNozzle.topLight;
+        	
+        	if (actuator != null)	{
+        		try {
+        			if(!ReferencePnpJobProcessor.topLightFlag) {
+        				actuator.actuate(true);
+        				ReferencePnpJobProcessor.topLightFlag = true;
+        			}
+        			else {
+        				actuator.actuate(false);
+        				ReferencePnpJobProcessor.topLightFlag = false;	
+        			}
+        		}
+        		catch (Exception e) {
+        		}		
+        	}
         }
     };
 

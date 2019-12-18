@@ -52,6 +52,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.gui.support.PasteDispenserItem;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -65,6 +66,7 @@ import org.openpnp.spi.PasteDispenser;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -310,14 +312,14 @@ public class MachineControlsPanel extends JPanel {
         }
     }
     public HomeAction homeAction = new HomeAction();
-   @SuppressWarnings("serial")
+    
+	@SuppressWarnings("serial")
     public Action vacOnAction = new AbstractAction("VAC ON") {
-        
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
         	HeadMountable tool = getSelectedTool();
-        	 Actuator actuator = tool.getHead().getActuatorByName("VAC");
+        	Actuator actuator = tool.getHead().getActuatorByName("VAC");
 			 //Actuator actuator = tool.getNozzle().getActuatorByName("VAC");
  			if (actuator!= null)
  			{
@@ -334,11 +336,10 @@ public class MachineControlsPanel extends JPanel {
     @SuppressWarnings("serial")
     public Action vacOffAction = new AbstractAction("VAC OFF") {
         
-
         @Override
         public void actionPerformed(ActionEvent arg0) {
-        	HeadMountable tool = getSelectedTool();
-        	 Actuator actuator = tool.getHead().getActuatorByName("VAC");
+        	HeadMountable tool = getSelectedNozzle();
+        	Actuator actuator = tool.getHead().getActuatorByName("VAC");
 			 //Actuator actuator = tool.getNozzle().getActuatorByName("VAC");
  			if (actuator!= null)
  			{
@@ -351,7 +352,7 @@ public class MachineControlsPanel extends JPanel {
  			}
         }
     };
-
+    
     @SuppressWarnings("serial")
     public Action targetToolAction = new AbstractAction(null, Icons.centerTool) {
         @Override

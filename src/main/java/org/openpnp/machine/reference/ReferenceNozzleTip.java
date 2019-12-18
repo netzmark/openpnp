@@ -300,15 +300,20 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         }
         return null;
     }
-	
+
     public double getVacuumLevelPartOn() {
-        return vacuumLevelPartOn;
+        return vacuumLevelPartOn; //wartość do wyświetlenia na ekranie po odświerzeniu panela
     }
-
-    public void setVacuumLevelPartOn(double vacuumLevelPartOn) {
-        this.vacuumLevelPartOn = vacuumLevelPartOn;
-    }
-
+    
+//    public void setVacuumLevelPartOn(double vacuumLevelPartOn) { //wartość wpisana na ekranie
+//    	double dupa = 400;
+//        this.vacuumLevelPartOn = dupa; //this = wartość dotychczasowa zmieniana na nową (dupa)
+//    }
+    
+  public void setVacuumLevelPartOn(double vacuumLevelPartOn) { //wartość wpisana na ekranie
+    this.vacuumLevelPartOn = vacuumLevelPartOn; //this = wartość dotychczasowa zmieniana na nową (dupa)
+}    
+    
     public double getVacuumLevelPartOff() {
         return vacuumLevelPartOff;
     }

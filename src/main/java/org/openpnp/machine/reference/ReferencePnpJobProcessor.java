@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
@@ -96,7 +95,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         PartHeight,
         Part
     }
-
+  
     public static class PlannedPlacement {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
@@ -169,7 +168,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     int cycles = 0;
     int nozzleTipChanges = 0;
-   
+
     public ReferencePnpJobProcessor() {
         fsm.add(State.Uninitialized, Message.Initialize, State.PreFlight, this::doInitialize);
 
@@ -238,7 +237,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 makeSkip=false;
                 this.fireJobState(this.machine.getSignalers(), AbstractJobProcessor.State.ERROR);
                 throw(e);
-            }
+            } 
         }
 
         if (fsm.getState() == State.Stopped) {
@@ -445,10 +444,30 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
     }
+    
+    
+    public static boolean topLightFlag = false;
+    public static void doTopLightOn() throws Exception { // top light control added
+        if (ReferenceNozzle.topLight!=null && !topLightFlag) {
+        	Logger.debug("Turning on the light of Downlooking Camera");
+        	ReferenceNozzle.topLight.actuate(true);
+        	topLightFlag = true;
+        }
+    }
+        	
+    public static void doTopLightOff() throws Exception { // top light control added        	
+    	if (ReferenceNozzle.topLight!=null && topLightFlag) {
+    		Logger.debug("Turning off the light of Downlooking Camera");        	
+        	ReferenceNozzle.topLight.actuate(false);
+        	topLightFlag = false;
+    	}
+    }
 
+    
     protected void doFiducialCheck() throws Exception {
         fireTextStatus("Performing fiducial checks.");
 
+        doTopLightOn();
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
         if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
@@ -473,16 +492,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             locator.locateBoard(boardLocation);
             Logger.debug("Fiducial check for {}", boardLocation);
             completedFidChecks.add(boardLocation);
+            doTopLightOff();
         }
     }
     
     protected void doIndividualFiducialCheck(BoardLocation boardLocation) throws Exception {
         fireTextStatus("Performing individual fiducial check.");
+        
+        doTopLightOn();
+        Logger.debug("Turning doPlan");
 
         FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
         
         locator.locateBoard(boardLocation);
         Logger.debug("Fiducial check for {}", boardLocation);
+        doTopLightOff();
     }
 
     /**
@@ -514,6 +538,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         plannedPlacements.clear();
 
         fireTextStatus("Planning placements.");
+        
+        doTopLightOff();
+        Logger.debug("doPlan");
 
         List<JobPlacement> jobPlacements;
 
@@ -973,7 +1000,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Retract
             nozzle.moveToSafeZ(); //||
-
+            
             // Mark the placement as finished
             jobPlacement.status = Status.Complete;
             
@@ -1036,7 +1063,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Configuration.get().getScripting().on("Job.Finished", params);
         
         fireTextStatus("Job finished: Placed %s parts in %s sec (%s CPH). Fixed %s parts.", totalPartsPlaced, df.format(dtSec), df.format(totalPartsPlaced / (dtSec / 3600.0)), totalPartsSkipped);
-     
+        doTopLightOn();
         saveJobAndConfig(true);
     }
     

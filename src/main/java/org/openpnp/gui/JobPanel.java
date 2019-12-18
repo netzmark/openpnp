@@ -78,6 +78,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -989,8 +990,9 @@ public class JobPanel extends JPanel {
                 // to Stepping.
                 if (state == State.Running) {
                     try {
-                    Logger.debug("Job error dialog choose: pause");
-                    setState(State.Paused);
+                        ReferencePnpJobProcessor.doTopLightOn();
+                    	Logger.debug("Job error dialog choose: pause"); //TOP LIGHT ON
+                    	setState(State.Paused);
                     }
                     catch (Exception e) {
                         // Since we are checking if we're in the Running state this should not
@@ -1095,15 +1097,18 @@ public class JobPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
                 if (state == State.Stopped) {
                     setState(State.Running);
+                    ReferencePnpJobProcessor.doTopLightOn();
                     jobStart();
                 }
                 else if (state == State.Paused) {
                     setState(State.Running);
+                    ReferencePnpJobProcessor.doTopLightOff();
                     jobRun();
                 }
                 // If we're running and the user hits pause we pause.
                 else if (state == State.Running) {
                     setState(State.Pausing);
+                    ReferencePnpJobProcessor.doTopLightOn();
                 }
                 else {
                     throw new Exception("Don't know how to change from state " + state);

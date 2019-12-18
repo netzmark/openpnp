@@ -15,6 +15,8 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor.Message;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor.State;
 import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
@@ -69,7 +71,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     protected ReferenceNozzleTip nozzleTip;
 
-    Actuator actVacuum; // Marek change: machine is faster, but need program restart if name changes. vacuum actuator
+    Actuator actDown; // Marek change: machine is faster, but need program restart if name changes.
+    Actuator actVacuum; // Marek change: machine is faster, but need program restart if name changes.
+    public static Actuator topLight; // Marek change: machine is faster, but need program restart if name changes.
+    
     public ReferenceNozzle() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -77,7 +82,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 nozzleTip = (ReferenceNozzleTip) nozzleTips.get(currentNozzleTipId);
                 actDown = getHead().getMachine().getActuator(getId()); // Marek change: actuator added to can control lower/raise Nozzle from RefferenceNozzle
                 actVacuum = getHead().getMachine().getActuator(getId()+"_VAC"); // Marek change: actuator added to can control vacuum on/off from RefferenceNozzle
-
+                //topLight = getMachine().getActuator("DownCamLights"); // Marek change: actuator added to can control Light of Down Looking Camera from ReferencePnpJobProcessor
+                topLight = getMachine().getActuatorByName("DownCamLights"); // Marek change: actuator added to can control Light of Down Looking Camera from ReferencePnpJobProcessor
             }
         });
     }
@@ -204,7 +210,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             ReferenceNozzleTip nt = getNozzleTip();
             double vacuumLevel;
 
-    //First vacuum check (before nozzle rising) to rise it up immediately ----
+    //First vacuum check (before nozzle rising) to rise it up immediately
     //(vacuum value is rising after the nozzle touched to the part, so we track the rising to avoid hard dwell time counting) 
             while(times-->0) {
                 vacuumLevel = Double.parseDouble(actuator.read());
@@ -242,18 +248,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             else {
               if (vacuumLevel < nt.getVacuumLevelPartOn()) {
               throw new Exception(String.format(
-                  "Pick failure: Vacuum level %f (incl. -5 offset) is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
+                  "Pick failure: Vacuum level %f (reduced by the -5 offset) is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
                    vacuumLevel, nt.getVacuumLevelPartOn()));
               }
       
-          	double vacuumLevel2;
-            Thread.sleep(nozzleTip.getPickDwellMilliseconds());
-  			Logger.debug("programmable pause: {}", nozzleTip.getPickDwellMilliseconds());
+              double vacuumLevel2;
+              Thread.sleep(nozzleTip.getPickDwellMilliseconds());
+              Logger.debug("Waitng programmable pause: {}", nozzleTip.getPickDwellMilliseconds());
      			
-           	vacuumLevel2 = Double.parseDouble(actuator.read());	
+              vacuumLevel2 = Double.parseDouble(actuator.read());	
             	
               if (vacuumLevel2 >= vacuumLevel) {
-                  Logger.debug("Vacuum level is {} and it is more than VacuumLevelPartOn {} - it means the part is picked successfully", vacuumLevel, nt.getVacuumLevelPartOn());
+                  Logger.debug("Vacuum level2 is {} and it's more than VacuumLevelPartOn {} - it means the part is picked successfully", vacuumLevel, nt.getVacuumLevelPartOn());
               }
               else {
             	  throw new Exception(String.format(
@@ -342,6 +348,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
              */   
         }
+        else {
+            if(actDown!=null) {
+                Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
+                Logger.debug("{}.moveTo(Nozzle Up)", getId());
+                actDown.actuate(false);
+                Logger.debug("placeDwellTime between checks: {}ms", (getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds()));
+                Thread.sleep(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
+                actVacuum.actuate(true); //pumpON to check in later procedure (prePickTest) if the part has not stayed on nozzle UWAGA MOZE DO SKRYPTU
+             } 
+        }
     }
     
     private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
@@ -382,7 +398,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return new Location(camera.getUnitsPerPixel().getUnits());
     }
 
-    Actuator actDown; // Marek change: line added by Cri  /////consider if still needed it here
+    //Actuator actDown; // Marek change: line added by Cri  /////consider if still needed it here
     @Override
     public void moveTo(Location location, double speed) throws Exception {
         // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
