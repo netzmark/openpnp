@@ -46,6 +46,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JCheckBox checkBoxDisableAutomatics;
     private JCheckBox checkBoxAutoSkipDisabledFeeders;
     private JCheckBox checkBoxAutoDisableFeeder;
+    private JCheckBox checkBoxDisableTipChanging;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -82,7 +83,13 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        }
+                
                 ));
 
         JLabel lblParkWhenComplete = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.ParkWhenComplete"));
@@ -133,6 +140,13 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         checkBoxAutoSkipDisabledFeeders = new JCheckBox("");
         panelGeneral.add(checkBoxAutoSkipDisabledFeeders, "4, 20");
         
+        JLabel lblDisableTipChanging = new JLabel("Disable Tips Changing");
+        panelGeneral.add(lblDisableTipChanging, "2, 22, right, default");
+        lblDisableTipChanging.setToolTipText("Don't load unloaded tips during the Job.");
+        
+        checkBoxDisableTipChanging = new JCheckBox("");
+        panelGeneral.add(checkBoxDisableTipChanging, "4, 22");
+        
     }
     
     @Override
@@ -144,5 +158,6 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "disableAutomatics", checkBoxDisableAutomatics, "selected");
         addWrappedBinding(jobProcessor, "autoSkipDisabledFeeders", checkBoxAutoSkipDisabledFeeders, "selected");
         addWrappedBinding(jobProcessor, "autoDisableFeeder", checkBoxAutoDisableFeeder, "selected");
+		addWrappedBinding(jobProcessor, "disableTipChanging", checkBoxDisableTipChanging, "selected");
     }
 }

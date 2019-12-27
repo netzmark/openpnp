@@ -91,4 +91,5 @@ public interface Nozzle
     public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
     
     public void removeNozzleTip(NozzleTip nozzleTip);
+
 }
