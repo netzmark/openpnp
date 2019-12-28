@@ -158,6 +158,6 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "disableAutomatics", checkBoxDisableAutomatics, "selected");
         addWrappedBinding(jobProcessor, "autoSkipDisabledFeeders", checkBoxAutoSkipDisabledFeeders, "selected");
         addWrappedBinding(jobProcessor, "autoDisableFeeder", checkBoxAutoDisableFeeder, "selected");
-		addWrappedBinding(jobProcessor, "disableTipChanging", checkBoxDisableTipChanging, "selected");
+        addWrappedBinding(jobProcessor, "disableTipChanging", checkBoxDisableTipChanging, "selected");
     }
 }

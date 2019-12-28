@@ -6,7 +6,6 @@ import java.util.List;
 import javax.swing.Icon;
 
 import org.openpnp.gui.support.Icons;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;

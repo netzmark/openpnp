@@ -148,7 +148,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     boolean autoDisableFeeder = false;
     
     @Element(required = false)
-	static boolean disableTipChanging = false;
+    static boolean disableTipChanging = false;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -1393,8 +1393,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (nozzle.getNozzleTip() != null) {
                     for (JobPlacement jobPlacement : jobPlacements) {
                     	Placement placement = jobPlacement.placement;
-                        Part part = placement.getPart();
-                        if (nozzle.getNozzleTip().canHandle(part)) {
+                    	Part part = placement.getPart();
+                    	if (nozzle.getNozzleTip().canHandle(part)) {
                             solution = jobPlacement;
                             break;
                         }
@@ -1409,10 +1409,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // If that didn't work, see if we can put one on with a nozzle tip change.
                 for (JobPlacement jobPlacement : jobPlacements) {
                     Placement placement = jobPlacement.placement;
-                    int threshold=0; //it should be variable programmable in gui
+                    int threshold=5000000; //it should be variable programmable in gui
                     int size = jobPlacements.size();
                     Part part = placement.getPart();
-                    if (nozzleCanHandle(nozzle, part) && (!disableTipChanging || (size<threshold))) { //don't use isDisableTipChanging()
+                    if (nozzleCanHandle(nozzle, part) && (disableTipChanging==false || size>threshold)) { //don't use isDisableTipChanging()
                         solution = jobPlacement;
                         break;
                     }
