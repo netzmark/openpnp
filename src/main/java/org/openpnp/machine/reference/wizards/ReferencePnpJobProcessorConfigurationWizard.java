@@ -24,10 +24,12 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobOrderHint;
 
@@ -47,6 +49,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JCheckBox checkBoxAutoSkipDisabledFeeders;
     private JCheckBox checkBoxAutoDisableFeeder;
     private JCheckBox checkBoxDisableTipChanging;
+    private JTextField sizeThresholdTf; //sizeThreshold
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -64,6 +67,10 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.DEFAULT_COLSPEC,
                         },
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -112,13 +119,11 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         
         JLabel lblAutoSaveConfiguration = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.AutoSaveConfiguration") + " " + (jobProcessor.getConfigSaveFrequencyMs() / 1000 / 60) + " min");
         panelGeneral.add(lblAutoSaveConfiguration, "2, 8, right, default");//
-
+        lblAutoSaveConfiguration.setToolTipText(Translations.getString(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.DelayInfo")));
+        
         checkBoxAutoSaveConfiguration = new JCheckBox("");
         panelGeneral.add(checkBoxAutoSaveConfiguration, "4, 8");
-
-        JLabel lblDelayInfo = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.DelayInfo"));
-        panelGeneral.add(lblDelayInfo, "4, 10, left, default");
-
+       
         JLabel lblDisableAutomatics = new JLabel("Disable Feeder's Automatic Skipping and Disabling");
         panelGeneral.add(lblDisableAutomatics, "2, 16, right, default");
         lblDisableAutomatics.setToolTipText("Global <one touch> disabling any feeder's automation.");
@@ -147,10 +152,21 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         checkBoxDisableTipChanging = new JCheckBox("");
         panelGeneral.add(checkBoxDisableTipChanging, "4, 22");
         
+        JLabel lblSizeThreshold = new JLabel("after there is less parts to assemble than:");
+        panelGeneral.add(lblSizeThreshold, "4, 24, left, default");
+                
+        sizeThresholdTf = new JTextField();
+        sizeThresholdTf.setText("100000");
+        panelGeneral.add(sizeThresholdTf, "4, 26, fill, default");
+        sizeThresholdTf.setColumns(16);
+        sizeThresholdTf.setToolTipText("0 means the same like <Changings enabled>. Set the value higehr than number of parts in the Job to have this active always."); 
+        
     }
     
     @Override
     public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
+        
         addWrappedBinding(jobProcessor, "parkWhenComplete", parkWhenComplete, "selected");
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
         addWrappedBinding(jobProcessor, "autoSaveJob", checkBoxAutoSaveJobAfterPlacement, "selected");
@@ -159,5 +175,6 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "autoSkipDisabledFeeders", checkBoxAutoSkipDisabledFeeders, "selected");
         addWrappedBinding(jobProcessor, "autoDisableFeeder", checkBoxAutoDisableFeeder, "selected");
         addWrappedBinding(jobProcessor, "disableTipChanging", checkBoxDisableTipChanging, "selected");
+        addWrappedBinding(jobProcessor, "sizeThreshold", sizeThresholdTf, "text", intConverter);
     }
 }

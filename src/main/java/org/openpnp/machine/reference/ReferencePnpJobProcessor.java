@@ -149,6 +149,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     @Element(required = false)
     static boolean disableTipChanging = false;
+    
+    @Attribute(required=false)    
+    protected static int sizeThreshold = 100000;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -1240,7 +1243,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     public void setDisableTipChanging(boolean disableTipChanging) {
-        this.disableTipChanging = disableTipChanging;
+        ReferencePnpJobProcessor.disableTipChanging = disableTipChanging;
+    }
+    
+    public int getSizeThreshold() {
+        return sizeThreshold;
+    }
+  
+    public void setSizeThreshold(int sizeThreshold) {
+        ReferencePnpJobProcessor.sizeThreshold = sizeThreshold;
     }
 
     public long getConfigSaveFrequencyMs() {
@@ -1409,10 +1420,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // If that didn't work, see if we can put one on with a nozzle tip change.
                 for (JobPlacement jobPlacement : jobPlacements) {
                     Placement placement = jobPlacement.placement;
-                    int threshold=5000000; //it should be variable programmable in gui
+//                    int threshold=5000000; //it should be variable programmable in gui
                     int size = jobPlacements.size();
                     Part part = placement.getPart();
-                    if (nozzleCanHandle(nozzle, part) && (disableTipChanging==false || size>threshold)) { //don't use isDisableTipChanging()
+                    if (nozzleCanHandle(nozzle, part) && (disableTipChanging==false || size>sizeThreshold)) { //don't use isDisableTipChanging()
                         solution = jobPlacement;
                         break;
                     }
