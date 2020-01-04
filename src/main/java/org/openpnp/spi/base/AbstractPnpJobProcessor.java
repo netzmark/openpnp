@@ -84,7 +84,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
 //        throw new Exception(
 //                "#No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
 //    }    
-    	
+        	
     public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
         for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
             if (nozzleTip.canHandle(part)) {

@@ -96,7 +96,6 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 //                        FormSpecs.RELATED_GAP_ROWSPEC,
 //                        FormSpecs.DEFAULT_ROWSPEC,
                         }
-                
                 ));
 
         JLabel lblParkWhenComplete = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.ParkWhenComplete"));

@@ -174,7 +174,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     boolean makeSkip;
     
     long lastConfigSavedTimeMs = 0;
-    
     int cycles = 0;
     int nozzleTipChanges = 0;
 
