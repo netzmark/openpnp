@@ -49,7 +49,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JCheckBox checkBoxAutoSkipDisabledFeeders;
     private JCheckBox checkBoxAutoDisableFeeder;
     private JCheckBox checkBoxDisableTipChanging;
-    private JTextField sizeThresholdTf; //sizeThreshold
+    //private JTextField sizeThresholdTf;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -91,10 +91,10 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
+//                        FormSpecs.RELATED_GAP_ROWSPEC,
+//                        FormSpecs.DEFAULT_ROWSPEC,
+//                        FormSpecs.RELATED_GAP_ROWSPEC,
+//                        FormSpecs.DEFAULT_ROWSPEC,
                         }
                 
                 ));
@@ -145,27 +145,27 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         checkBoxAutoSkipDisabledFeeders = new JCheckBox("");
         panelGeneral.add(checkBoxAutoSkipDisabledFeeders, "4, 20");
         
-        JLabel lblDisableTipChanging = new JLabel("Disable Tips Changing");
+        JLabel lblDisableTipChanging = new JLabel("Use currently loaded NozzleTips only");
         panelGeneral.add(lblDisableTipChanging, "2, 22, right, default");
-        lblDisableTipChanging.setToolTipText("Don't load unloaded tips during the Job.");
+        lblDisableTipChanging.setToolTipText("Changing nozzle tips during the Job is also disabled.");
         
         checkBoxDisableTipChanging = new JCheckBox("");
         panelGeneral.add(checkBoxDisableTipChanging, "4, 22");
         
-        JLabel lblSizeThreshold = new JLabel("after there is less parts to assemble than:");
-        panelGeneral.add(lblSizeThreshold, "4, 24, left, default");
+//        JLabel lblSizeThreshold = new JLabel("after there is less parts to assemble than:");
+//        panelGeneral.add(lblSizeThreshold, "4, 24, left, default");
                 
-        sizeThresholdTf = new JTextField();
-        sizeThresholdTf.setText("100000");
-        panelGeneral.add(sizeThresholdTf, "4, 26, fill, default");
-        sizeThresholdTf.setColumns(16);
-        sizeThresholdTf.setToolTipText("0 means the same like <Changings enabled>. Set the value higehr than number of parts in the Job to have this active always."); 
+//        sizeThresholdTf = new JTextField();
+//        sizeThresholdTf.setText("100000");
+//        panelGeneral.add(sizeThresholdTf, "4, 26, fill, default");
+//        sizeThresholdTf.setColumns(16);
+//        sizeThresholdTf.setToolTipText("0 means the same like <Changings enabled>. Set the value higehr than number of parts in the Job to have this active always."); 
         
     }
     
     @Override
     public void createBindings() {
-        IntegerConverter intConverter = new IntegerConverter();
+        //IntegerConverter intConverter = new IntegerConverter();
         
         addWrappedBinding(jobProcessor, "parkWhenComplete", parkWhenComplete, "selected");
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
@@ -175,6 +175,6 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "autoSkipDisabledFeeders", checkBoxAutoSkipDisabledFeeders, "selected");
         addWrappedBinding(jobProcessor, "autoDisableFeeder", checkBoxAutoDisableFeeder, "selected");
         addWrappedBinding(jobProcessor, "disableTipChanging", checkBoxDisableTipChanging, "selected");
-        addWrappedBinding(jobProcessor, "sizeThreshold", sizeThresholdTf, "text", intConverter);
+        //addWrappedBinding(jobProcessor, "sizeThreshold", sizeThresholdTf, "text", intConverter);
     }
 }

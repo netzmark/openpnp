@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -54,15 +55,36 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
     }
 
     public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws Exception {
-        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
-            if (nozzleTip.canHandle(part)) {
-                return nozzleTip;
-            }
-        }
-        throw new Exception(
-                "No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
+    	
+    	if (ReferencePnpJobProcessor.disableTipChanging) {
+    		NozzleTip nozzleTip = nozzle.getNozzleTip();
+    		if(nozzleTip.canHandle(part)) {
+    		return nozzleTip;
+    		}
+    		throw new Exception(
+    				"#code01: No compatible nozzle tip on loaded nozzle " + nozzle.getName() + " found for part " + part.getId());
+    	}
+    	
+    		for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+              if (nozzleTip.canHandle(part)) {
+                  return nozzleTip;
+              }
+    		}
+    		throw new Exception(
+    				"#code02: No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
     }
-
+    
+    /* original */
+//    public static NozzleTip findNozzleTip(Nozzle nozzle, Part part) throws Exception {
+//        for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
+//            if (nozzleTip.canHandle(part)) {
+//                return nozzleTip;
+//            }
+//        }
+//        throw new Exception(
+//                "#No compatible nozzle tip on nozzle " + nozzle.getName() + " found for part " + part.getId());
+//    }    
+    	
     public static boolean nozzleCanHandle(Nozzle nozzle, Part part) {
         for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
             if (nozzleTip.canHandle(part)) {
@@ -87,7 +109,10 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             catch (Exception e) {
             }
         }
-        throw new Exception("No compatible nozzle tip on any nozzle found for part " + part.getId());
+        if (ReferencePnpJobProcessor.disableTipChanging) {
+        	throw new Exception("#code001: No compatible nozzle tip on loaded nozzle found for part " + part.getId());
+        }
+        throw new Exception("#code002: No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
     /**
@@ -106,19 +131,14 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         throw new Exception("No compatible, enabled feeder found for part " + part.getId());
     }
 
-
     public static PartAlignment findPartAligner(Machine machine, Part part) throws Exception {
-        for (PartAlignment partAlignment : machine.getPartAlignments())
-        {
-
-                       if(partAlignment.canHandle(part))
-                       {
-                           return partAlignment;
-                       }
+        for (PartAlignment partAlignment : machine.getPartAlignments()) {
+        	if(partAlignment.canHandle(part)) {
+        		return partAlignment;
+        	}
         }
 
         // if we can't find a part-aligner, thats ok.. the user might not have defined one, so we place without aligning
         return null;
     }
-
 }

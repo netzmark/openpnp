@@ -148,10 +148,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     boolean autoDisableFeeder = false;
     
     @Element(required = false)
+	public
     static boolean disableTipChanging = false;
     
-    @Attribute(required=false)    
-    protected static int sizeThreshold = 100000;
+//    @Attribute(required=false)    
+//    protected static int sizeThreshold = 100000;
 
     private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
 
@@ -610,22 +611,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Changing nozzle tip on nozzle %s.", nozzle.getId());
 
             // Otherwise find a compatible tip and load it
-            NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-            fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
-                    nozzle.getId(), 
-                    nozzleTip.getName());   
-            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
-                    new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
-            nozzle.unloadNozzleTip();
-            nozzle.loadNozzleTip(nozzleTip);
-            
-            // calibrate nozzle after change
-            if (nozzleTip != null) {
-                if (!nozzleTip.isCalibrated()) {
-                    Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
-                    nozzleTip.calibrate();
-                }
-            }
+//            NozzleTip nozzleTip = findNozzleTip(nozzle, part);
+//            fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
+//                    nozzle.getId(), 
+//                    nozzleTip.getName());   
+//            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
+//                    new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
+//            nozzle.unloadNozzleTip();
+//            nozzle.loadNozzleTip(nozzleTip);
+//            
+//            // calibrate nozzle after change
+//            if (nozzleTip != null) {
+//                if (!nozzleTip.isCalibrated()) {
+//                    Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
+//                    nozzleTip.calibrate();
+//                }
+//            }
             
             // Mark this step as complete
             plannedPlacement.stepComplete = true;
@@ -1246,13 +1247,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         ReferencePnpJobProcessor.disableTipChanging = disableTipChanging;
     }
     
-    public int getSizeThreshold() {
-        return sizeThreshold;
-    }
-  
-    public void setSizeThreshold(int sizeThreshold) {
-        ReferencePnpJobProcessor.sizeThreshold = sizeThreshold;
-    }
+//    public int getSizeThreshold() {
+//        return sizeThreshold;
+//    }
+//  
+//    public void setSizeThreshold(int sizeThreshold) {
+//        ReferencePnpJobProcessor.sizeThreshold = sizeThreshold;
+//    }
 
     public long getConfigSaveFrequencyMs() {
         return configSaveFrequencyMs;
@@ -1420,9 +1421,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // If that didn't work, see if we can put one on with a nozzle tip change.
                 for (JobPlacement jobPlacement : jobPlacements) {
                     Placement placement = jobPlacement.placement;
-                    int size = jobPlacements.size();
+                    //int size = jobPlacements.size();
                     Part part = placement.getPart();
-                    if (nozzleCanHandle(nozzle, part) && (disableTipChanging==false || size>sizeThreshold)) { //don't use isDisableTipChanging()
+                    //if (nozzleCanHandle(nozzle, part) && (disableTipChanging==false || size>sizeThreshold)) { //don't use isDisableTipChanging()
+                    if (nozzleCanHandle(nozzle, part) && (disableTipChanging==false)) { //don't use isDisableTipChanging()	
                         solution = jobPlacement;
                         break;
                     }
