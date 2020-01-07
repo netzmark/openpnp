@@ -60,9 +60,9 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
     		NozzleTip nozzleTip = nozzle.getNozzleTip();
     		if(nozzleTip.canHandle(part)) {
     		return nozzleTip;
-    		}
+    		}  
     		throw new Exception(
-    				"#code01: No compatible nozzle tip on loaded nozzle " + nozzle.getName() + " found for part " + part.getId());
+    				"#code01: No compatible nozzle tip mounted on nozzle " + nozzle.getName() + " found for part " + part.getId());
     	}
     	
     		for (NozzleTip nozzleTip : nozzle.getNozzleTips()) {
@@ -110,9 +110,9 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
             }
         }
         if (ReferencePnpJobProcessor.disableTipChanging) {
-        	throw new Exception("#code001: No compatible nozzle tip on loaded nozzle found for part " + part.getId());
+        	throw new Exception("No compatible nozzle tip  mounted on nozzle found for part " + part.getId());
         }
-        throw new Exception("#code002: No compatible nozzle tip on any nozzle found for part " + part.getId());
+        throw new Exception("No compatible nozzle tip on any nozzle found for part " + part.getId());
     }
 
     /**

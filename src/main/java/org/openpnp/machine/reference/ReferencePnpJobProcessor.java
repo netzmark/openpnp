@@ -44,6 +44,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
@@ -453,24 +454,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
-    
     public static boolean topLightFlag = false;
+    public static Actuator topLight;
+    
     public static void doTopLightOn() throws Exception { // top light control added
-        if (JogControlsPanel.topLight!=null && !topLightFlag) {
+    	topLight = Configuration.get().getMachine().getActuatorByName("DownCamLights");
+        if (topLight != null && !topLightFlag) {
         	Logger.debug("Turning on the light of Downlooking Camera");
-        	JogControlsPanel.topLight.actuate(true);
+        	topLight.actuate(true);
         	topLightFlag = true;
         }
     }
         	
     public static void doTopLightOff() throws Exception { // top light control added        	
-    	if (JogControlsPanel.topLight!=null && topLightFlag) {
+    	if (topLight != null && topLightFlag) {
     		Logger.debug("Turning off the light of Downlooking Camera");        	
-    		JogControlsPanel.topLight.actuate(false);
+    		topLight.actuate(false);
         	topLightFlag = false;
     	}
     }
-
     
     protected void doFiducialCheck() throws Exception {
         fireTextStatus("Performing fiducial checks.");
@@ -610,22 +612,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             fireTextStatus("Changing nozzle tip on nozzle %s.", nozzle.getId());
 
             // Otherwise find a compatible tip and load it
-//            NozzleTip nozzleTip = findNozzleTip(nozzle, part);
-//            fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
-//                    nozzle.getId(), 
-//                    nozzleTip.getName());   
-//            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
-//                    new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
-//            nozzle.unloadNozzleTip();
-//            nozzle.loadNozzleTip(nozzleTip);
-//            
-//            // calibrate nozzle after change
-//            if (nozzleTip != null) {
-//                if (!nozzleTip.isCalibrated()) {
-//                    Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
-//                    nozzleTip.calibrate();
-//                }
-//            }
+            NozzleTip nozzleTip = findNozzleTip(nozzle, part);
+            fireTextStatus("Change NozzleTip on Nozzle %s to %s.", 
+                    nozzle.getId(), 
+                    nozzleTip.getName());   
+            Logger.debug("Change NozzleTip on Nozzle {} from {} to {}",
+                    new Object[] {nozzle, nozzle.getNozzleTip(), nozzleTip});
+            nozzle.unloadNozzleTip();
+            nozzle.loadNozzleTip(nozzleTip);
+            
+            // calibrate nozzle after change
+            if (nozzleTip != null) {
+                if (!nozzleTip.isCalibrated()) {
+                    Logger.debug("Calibrating nozzle tip {} after change.", nozzleTip);
+                    nozzleTip.calibrate();
+                }
+            }
             
             // Mark this step as complete
             plannedPlacement.stepComplete = true;
