@@ -502,8 +502,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             locator.locateBoard(boardLocation);
             Logger.debug("Fiducial check for {}", boardLocation);
             completedFidChecks.add(boardLocation);
-            doTopLightOff();
-        }
+            }
+        doTopLightOff();
     }
     
     protected void doIndividualFiducialCheck(BoardLocation boardLocation) throws Exception {
