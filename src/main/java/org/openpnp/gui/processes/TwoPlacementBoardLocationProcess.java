@@ -140,8 +140,9 @@ public class TwoPlacementBoardLocationProcess {
                 actualLocationA, actualLocationB);
 
         jobPanel.getSelection().setLocation(location);
-        jobPanel.refreshSelectedBoardRow();
-
+        //jobPanel.refreshSelectedBoardRow();
+        jobPanel.refreshSelectedRow();
+        
         return true;
     }
 

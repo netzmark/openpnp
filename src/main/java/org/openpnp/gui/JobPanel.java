@@ -144,6 +144,8 @@ public class JobPanel extends JPanel {
     private JobProcessor jobProcessor;
     
     private State state = State.Stopped;
+    
+    // try https://tips4java.wordpress.com/2010/01/24/table-row-rendering/ to show affine transform set
 
     public JobPanel(Configuration configuration, MainFrame frame) {
         this.configuration = configuration;
@@ -556,9 +558,9 @@ public class JobPanel extends JPanel {
         tableModel.fireTableDataChanged();
     }
 
-    public void refreshSelectedBoardRow() {
-        tableModel.fireTableRowsUpdated(table.getSelectedRow(),
-                table.getSelectedRow());
+    public void refreshSelectedRow() {
+        int index = table.convertRowIndexToModel(table.getSelectedRow());
+        tableModel.fireTableRowsUpdated(index, index);
     }
 
     public BoardLocation getSelection() {
@@ -1306,10 +1308,8 @@ public class JobPanel extends JPanel {
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 double z = getSelection().getLocation().getZ();
-                getSelection()
-                        .setLocation(camera.getLocation().derive(null, null, z, null));
-                tableModel.fireTableRowsUpdated(table.getSelectedRow(),
-                        table.getSelectedRow());
+                getSelection().setLocation(camera.getLocation().derive(null, null, z, null));
+                refreshSelectedRow();
             });
         }
     };
@@ -1326,8 +1326,7 @@ public class JobPanel extends JPanel {
             HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
             double z = getSelection().getLocation().getZ();
             getSelection().setLocation(tool.getLocation().derive(null, null, z, null));
-            tableModel.fireTableRowsUpdated(table.getSelectedRow(),
-                    table.getSelectedRow());
+            refreshSelectedRow();
         }
     };
 
@@ -1425,7 +1424,7 @@ public class JobPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 Location location = Configuration.get().getMachine().getFiducialLocator()
                         .locateBoard(getSelection());
-                refreshSelectedBoardRow();
+                refreshSelectedRow();
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MainFrame.get().getCameraViews().ensureCameraVisible(camera);
@@ -1486,7 +1485,7 @@ public class JobPanel extends JPanel {
                 Location location = Configuration.get().getMachine().getFiducialLocator()
                         .locateBoard(getSelection(), true);
                 getSelection().setLocation(location);
-                refreshSelectedBoardRow();
+                refreshSelectedRow();
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MainFrame.get().getCameraViews().ensureCameraVisible(camera);
