@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurati
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -1407,6 +1408,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     for (JobPlacement jobPlacement : jobPlacements) {
                     	Placement placement = jobPlacement.placement;
                     	Part part = placement.getPart();
+//                    	double height = placement.getPart().getHeight().getValue();
+//                    	if (height >= 4.0) {};
                     	if (nozzle.getNozzleTip().canHandle(part)) {
                             solution = jobPlacement;
                             break;
