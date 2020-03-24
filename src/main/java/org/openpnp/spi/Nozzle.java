@@ -24,7 +24,9 @@ public interface Nozzle
      * @throws Exception
      */	
 //    public void prePickTest(Part part) throws Exception;
-    public void prePickTest() throws Exception;
+    public void isPartOffTest() throws Exception;
+    
+	public void isPartOnTest() throws Exception;
     
     /**
      * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning
@@ -91,4 +93,5 @@ public interface Nozzle
     public void addNozzleTip(NozzleTip nozzleTip) throws Exception;
     
     public void removeNozzleTip(NozzleTip nozzleTip);
+
 }

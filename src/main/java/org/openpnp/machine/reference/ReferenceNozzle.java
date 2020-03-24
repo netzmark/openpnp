@@ -151,7 +151,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
     
     @Override
-    public void prePickTest() throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
+    public void isPartOffTest() throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
         
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
@@ -160,20 +160,43 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel < (nt.getVacuumLevelPartOff()-50)) { //50 is offset, if it is >(Off-offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Prepick test failure: Vacuum level %f is lower than expected value of %f for part off. Part may be stuck to nozzle.",
+                        "Prepick test failure: Vacuum level %f is lower than expected value of %f for part Off. Part may be stuck to nozzle.",
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
             else {
                 if (vacuumLevel > (nt.getVacuumLevelPartOff()+50)) { //50 is offset, if it is >(Off+offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Prepick test failure: Vacuum level %f is higher than expected value of %f (+50) for part off. Part may be stuck to nozzle.",
+                        "Prepick test failure: Vacuum level %f is higher than expected value of %f (+50 offset) for part Off. Part may be stuck to nozzle.",
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
         }
     }
 
+    @Override
+    public void isPartOnTest() throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
+        
+        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        if (actuator != null) {
+            ReferenceNozzleTip nt = getNozzleTip();
+            double vacuumLevel = (Double.parseDouble(actuator.read()) -5);
+            if (invertVacuumSenseLogic) {
+                if (vacuumLevel > nt.getVacuumLevelPartOn()) {
+                    throw new Exception(String.format(
+                        "Pick failure: Vacuum level %f is higher than expected value of %f for part On. Part may have failed to pick or feeder is empty.",
+                            vacuumLevel, nt.getVacuumLevelPartOn()));
+                }
+            }
+            else {
+                if (vacuumLevel < (nt.getVacuumLevelPartOn()) -5) { 
+                    throw new Exception(String.format(
+                            "Pick failure: Vacuum level %f (-5 offset) is lower than expected value of %f for part On. Part may have lost or feeder is empty.",
+                             vacuumLevel, nt.getVacuumLevelPartOn()));
+                }
+            }
+        }
+    }
     
     @Override
     //Idea of operation is:
@@ -236,7 +259,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 //Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
                 Thread.sleep(this.getPickDwellMilliseconds()); //Artur wanted have it here
             }
-
+     
+     // Second vacuum check (after nozzle rising)       
+            isPartOnTest();
+            
+/*
+ * This section is commented in relation to added function in RefererencePnpJobProcessor to check isPartOn
+ * at the cameraLocation instead of pickLocation.
+ * Uncomment whole this section if works wrong and comment related section RefererencePnpJobProcessor doAlign()
+ * and remove above short isPartOnTest();
+   
     // Second vacuum check (after nozzle rising)
             vacuumLevel = (Double.parseDouble(actuator.read()) -5);
             if (invertVacuumSenseLogic) {
@@ -247,9 +279,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 }
             }
             else {
-              if (vacuumLevel < nt.getVacuumLevelPartOn()) {
+              if (vacuumLevel < nt.getVacuumLevelPartOn() - 5) {
               throw new Exception(String.format(
-                  "Pick failure: Vacuum level %f (reduced by the -5 offset) is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
+                  "Pick failure: Vacuum level %f (-5 offset) is lower than expected value of %f for part on. Part may have failed to pick or feeder is empty.",
                    vacuumLevel, nt.getVacuumLevelPartOn()));
               }
       
@@ -268,6 +300,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             			  vacuumLevel2, vacuumLevel));
               	}
             }
+//END of this commented section            
+*/            
         }
     }
 
