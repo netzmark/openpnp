@@ -39,13 +39,13 @@ import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurati
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
@@ -755,8 +755,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
            }
         }
         
-      //Logger.debug("prePickTest");
-      //nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
+      //Logger.debug("prePickTest prePickTest whether the Part is off - nozzle empty");
+      //nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
 
                // Pick the part
         Feeder feeder = plannedPlacement.feeder;
@@ -773,14 +773,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
           //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
           
-          Logger.debug("prePickTest");
-          nozzle.prePickTest(); //this is the procedure to check before the pick whether the nozzle is empty
+          Logger.debug("prePickTest whether the Part is Off - nozzle empty");
+          fireTextStatus("Checking is nozzle clean before picking %s for %s.", part.getId(), placement.getId());
+          nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
           
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
           
           // Pick
+          fireTextStatus("Picking the Part %s for %s.", part.getId(), placement.getId());
           nozzle.pick(part);
-
+          
           // Retract
           nozzle.moveToSafeZ();
           fireTextStatus("Picked %s from %s for %s.", part.getId(),
@@ -812,6 +814,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * If all this fails and user will choose <try again> the part is again picked and aligned.
      */	
     protected void doAlign() throws Exception {
+    	boolean atCameraPosition = false;
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
@@ -822,10 +825,61 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             BoardLocation boardLocation = jobPlacement.boardLocation;
             Part part = placement.getPart();
-            fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
-
-            PartAlignment partAlignment = findPartAligner(machine, part);
+            fireTextStatus("doAlign started for %s for %s.", part.getId(), placement.getId());
+            
             Feeder feeder = plannedPlacement.feeder;
+            
+//START of New added section to check isPartOn at the cameraLocation instead of pickLocation.
+//Remove whole this section if works wrong and uncomment commented related section inReferenceNozzle pick(Part part)            
+            int pCounter = feeder.getPickRetryCount();
+            while (true) {
+                try {
+                /*
+                We want to move nozzle to the camera position to perform there delayed isPartOn test (not at the pick position).
+                We need it only one time before the first part alignment, for the remaining parts we already don't need (long time 
+                has passed from the moment of the picking procedure).
+                This is the reason why "atCameraPosition" variable is created.
+                */                 	
+                  if (!atCameraPosition) {
+                  Camera camera = VisionUtils.getBottomVisionCamera();
+                  MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation(nozzle));
+                  atCameraPosition = true;
+                  }
+                /*
+                In fact, here we finalize picking procedure confirming whether the part was picked properly (isPartOnTest not returns exception).
+                If not - we repeat the pick procedure.
+                */                  
+                  Logger.debug("isPartOnTest to check whether the Part is still On the nozzle");
+                  fireTextStatus("Checking isPartOn over the Camera: %s for %s.", part.getId(), placement.getId());
+                  nozzle.isPartOnTest();
+                  break;
+                }
+                catch (Exception e) { 
+                    if (pCounter>0) {
+                    	atCameraPosition = false;
+                    	pCounter--;
+                    	fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
+                    	discard(nozzle);
+                    	fireTextStatus("Picking again %s from %s for %s.", part.getId(),
+                    			feeder.getName(), placement.getId());
+                    	subFeedAndPick(plannedPlacement);
+                    }
+                    else {
+                        if (feeder.isAutoSkipPick()) { 
+                            makeSkip=true;
+                            if (isAutoDisableFeeder() && !isDisableAutomatics()) {
+                                feeder.setEnabled(false);
+                            }
+                             } 
+                    	throw (e);
+                    }
+                }
+            }
+//END of New added section to check isPartOn at the cameraLocation instead of pickLocation.  
+
+            fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
+            PartAlignment partAlignment = findPartAligner(machine, part); //here we get information the vision is enabled
+
             int alignCount = feeder.getAlignRetryCount();
             int i=0;
             
@@ -844,7 +898,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             throw new Exception(); 	                //we need exception to not align but go to catch and start 
                                                                     //next part picking.
                         }
-                        Logger.debug("Probe of Aligning nr: {}", i);                        
+                        Logger.debug("Probe of Aligning nr: {}", i);
                         plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
                             partAlignment,
                             part,
@@ -906,6 +960,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             plannedPlacement.stepComplete = true;
+            Logger.debug("plannedPlacement.stepComplete completed <true>");
         }
         clearStepComplete();
     }

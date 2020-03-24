@@ -23,10 +23,14 @@ public interface Nozzle
      * Commands the Nozzle to perform wether the nozzle is empty just before the pick procedure. 
      * @throws Exception
      */	
-//    public void prePickTest(Part part) throws Exception;
     public void isPartOffTest() throws Exception;
     
-	public void isPartOnTest() throws Exception;
+    /**
+     * Commands the Nozzle to perform wether the part is sitting on the nozzle.
+     * Used during pick the part or to confirm it later. 
+     * @throws Exception
+     */	
+    public void isPartOnTest() throws Exception;
     
     /**
      * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning
