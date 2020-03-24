@@ -773,7 +773,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
           //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
           
-          Logger.debug("prePickTest whether the Part is Off - nozzle empty");
+          Logger.debug("Is nozzle clean before picking? {}", nozzle.getName());
           fireTextStatus("Checking is nozzle clean before picking %s for %s.", part.getId(), placement.getId());
           nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
           
