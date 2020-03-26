@@ -256,7 +256,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 Logger.debug("{}.moveTo(Nozzle Up)", getId());
                 actDown.actuate(false); //rising nozzle immediately after the VacuumLevelPartOn value detected or full loop finished
                 Logger.debug("pickDwellTime after nozzle raising: {}ms", (getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds()));
-                //Thread.sleep(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
                 Thread.sleep(this.getPickDwellMilliseconds()); //Artur wanted have it here
             }
      

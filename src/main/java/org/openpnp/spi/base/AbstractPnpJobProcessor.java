@@ -43,6 +43,8 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         // discard the part
         nozzle.place();
         nozzle.moveToSafeZ();
+        Thread.sleep(150); //to let vacuum grow if nozzle is not clean
+        nozzle.isPartOffTest(); // to check at discard location if nozzle is clean
         
         try {
             Map<String, Object> globals = new HashMap<>();

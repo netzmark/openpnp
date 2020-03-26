@@ -774,13 +774,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
           
           Logger.debug("Is nozzle clean before picking? {}", nozzle.getName());
-          fireTextStatus("Checking is nozzle clean before picking %s for %s.", part.getId(), placement.getId());
+          fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
           nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
           
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
           
           // Pick
-          fireTextStatus("Picking the Part %s for %s.", part.getId(), placement.getId());
+          fireTextStatus("Picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
           nozzle.pick(part);
           
           // Retract
@@ -850,7 +850,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 If not - we repeat the pick procedure.
                 */                  
                   Logger.debug("isPartOnTest to check whether the Part is still On the nozzle");
-                  fireTextStatus("Checking isPartOn over the Camera: %s for %s.", part.getId(), placement.getId());
+                  fireTextStatus("Checking isPartOn over the Camera: %s (%s).", part.getId(), placement.getId());
                   nozzle.isPartOnTest();
                   break;
                 }
@@ -1054,7 +1054,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Move to the placement location
             MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
 
-            fireTextStatus("Placing %s for %s.", part.getId(), placement.getId());
+            fireTextStatus("Placing %s (%s).", part.getId(), placement.getId());
 
             // Place the part
             nozzle.place();
