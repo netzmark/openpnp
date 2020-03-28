@@ -30,6 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -1422,9 +1423,23 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Location location = Configuration.get().getMachine().getFiducialLocator()
-                        .locateBoard(getSelection());
+            	BoardLocation boardLocation = getSelection(); //added
+            	Location location = Configuration.get().getMachine().getFiducialLocator()
+            			.locateBoard(boardLocation); //.locateBoard(getSelection()); //exchanged
+                
+                /**
+                 * Set the board's location to the one returned from the fiducial check. We have
+                 * to store and restore the placement transform because setting the location
+                 * clears it.
+                 */
+                AffineTransform tx = boardLocation.getPlacementTransform(); //added
+                boardLocation.setLocation(location);						//added
+                boardLocation.setPlacementTransform(tx);					//added
                 refreshSelectedRow();
+                
+                /**
+                 * Move the camera to the calculated position.
+                 */
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MainFrame.get().getCameraViews().ensureCameraVisible(camera);
