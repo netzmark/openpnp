@@ -107,6 +107,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
         public boolean fed; //outdated, to remove
         public boolean disableAlignment = false;
+        public boolean doSingleRetry = false;
         public boolean stepComplete;
 
         public PlannedPlacement(Nozzle nozzle, JobPlacement jobPlacement) {
@@ -148,6 +149,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     @Element(required = false)
     boolean autoDisableFeeder = false;
+    
+    @Element(required = false)
+    boolean atCameraPosition = false;
     
     @Element(required = false)
 	public
@@ -804,6 +808,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                } 
                throw (e);
            }
+           atCameraPosition = false;
        }
     
     /*
@@ -814,7 +819,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * If all this fails and user will choose <try again> the part is again picked and aligned.
      */	
     protected void doAlign() throws Exception {
-    	boolean atCameraPosition = false;
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
                 continue;
@@ -831,7 +835,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
 //START of New added section to check isPartOn at the cameraLocation instead of pickLocation.
 //Remove whole this section if works wrong and uncomment commented related section inReferenceNozzle pick(Part part)            
-            int pCounter = feeder.getPickRetryCount();
+            int pickCounter = feeder.getPickRetryCount();
             while (true) {
                 try {
                 /*
@@ -840,11 +844,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 has passed from the moment of the picking procedure).
                 This is the reason why "atCameraPosition" variable is created.
                 */                 	
-                  if (!atCameraPosition) {
+                  if (plannedPlacement.doSingleRetry) { //this is to retry subFeedAndPick() only once
+                	  pickCounter=1;
+                	  throw new Exception ();
+                  }
+                  if (!atCameraPosition) { //else???
                   Camera camera = VisionUtils.getBottomVisionCamera();
                   MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation(nozzle));
                   atCameraPosition = true;
                   }
+
                 /*
                 In fact, here we finalize picking procedure confirming whether the part was picked properly (isPartOnTest not returns exception).
                 If not - we repeat the pick procedure.
@@ -854,14 +863,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                   nozzle.isPartOnTest();
                   break;
                 }
-                catch (Exception e) { 
-                    if (pCounter>0) {
-                    	atCameraPosition = false;
-                    	pCounter--;
+                catch (Exception e) {
+                	//if (plannedPlacement.doSingleRetry) {pickCounter=1;} //not needed duplication probably
+                	if (pickCounter>0) {
+                    	pickCounter--;
                     	fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
                     	discard(nozzle);
                     	fireTextStatus("Picking again %s from %s for %s.", part.getId(),
                     			feeder.getName(), placement.getId());
+                    	plannedPlacement.doSingleRetry=false; //to don't skip whole "try" after picking and can perform isPartOnTest()
                     	subFeedAndPick(plannedPlacement);
                     }
                     else {
@@ -870,7 +880,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             if (isAutoDisableFeeder() && !isDisableAutomatics()) {
                                 feeder.setEnabled(false);
                             }
-                             } 
+                             }
+                        plannedPlacement.doSingleRetry=true;
                     	throw (e);
                     }
                 }
@@ -960,7 +971,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             plannedPlacement.stepComplete = true;
-            Logger.debug("plannedPlacement.stepComplete completed <true>");
+            //Logger.debug("plannedPlacement.stepComplete completed <true>");
         }
         clearStepComplete();
     }
