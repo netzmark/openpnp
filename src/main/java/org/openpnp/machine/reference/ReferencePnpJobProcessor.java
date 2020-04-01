@@ -21,7 +21,7 @@ package org.openpnp.machine.reference;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.util.*;
+//import java.util.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,8 +33,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.openpnp.gui.JogControlsPanel;
+//import org.openpnp.gui.JogControlsPanel;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -120,8 +123,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return nozzle + " -> " + jobPlacement.toString();
         }
     }
-
-
 
     @Attribute(required = false)
     protected boolean parkWhenComplete = false;
@@ -777,7 +778,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
           //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
           MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
           
-          Logger.debug("Is nozzle clean before picking? {}", nozzle.getName());
+          Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
           fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
           nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
           
@@ -791,7 +792,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
           nozzle.moveToSafeZ();
           fireTextStatus("Picked %s from %s for %s.", part.getId(),
           feeder.getName(), placement.getId());
-          Logger.debug("Picked {} from {} with {}", part, feeder, nozzle);
+          Logger.debug("Picked {} from {} with {}", part.getId(), feeder.getName(), nozzle);
                    
           // feed after pick
           if (feeder != null) {
@@ -829,13 +830,27 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Placement placement = jobPlacement.placement;
             BoardLocation boardLocation = jobPlacement.boardLocation;
             Part part = placement.getPart();
-            fireTextStatus("doAlign started for %s for %s.", part.getId(), placement.getId());
-            
             Feeder feeder = plannedPlacement.feeder;
             
 //START of New added section to check isPartOn at the cameraLocation instead of pickLocation.
-//Remove whole this section if works wrong and uncomment commented related section inReferenceNozzle pick(Part part)            
-            int pickCounter = feeder.getPickRetryCount();
+//Remove whole this section if works wrong and uncomment commented related section inReferenceNozzle pick(Part part)    
+
+//Issue: even if vision is not enabled for the part, the part will be taken to the camera position to perform isPartOn()
+//I don't have idea how to solve this weell (algorithm) so leave it as it - also because don't use vision disabled. 
+//To improve in future if required.            
+            
+            /* We need to know whether the part should be prerotated or not to bring the part with angle 
+             * in agree with general assumptions
+             */
+            ReferenceBottomVision rbv = (ReferenceBottomVision) machine.getPartAlignments().get(0); //to don't need change dynamic variables into statics.
+            PartSettings partSettings = rbv.partSettingsByPartId.get(part.getId());
+            double wantedRotation = 0.0;
+            if ((partSettings.getPreRotateUsage() == PreRotateUsage.Default && rbv.isPreRotate())
+            		|| (partSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
+            	wantedRotation = placement.getLocation().getRotation();
+            }
+
+            int pickCounter = feeder.getPickRetryCount();                
             while (true) {
                 try {
                 /*
@@ -848,10 +863,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 	  pickCounter=1;
                 	  throw new Exception ();
                   }
-                  if (!atCameraPosition) { //else???
-                  Camera camera = VisionUtils.getBottomVisionCamera();
-                  MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation(nozzle));
-                  atCameraPosition = true;
+                  if (!atCameraPosition) {
+                      Logger.debug("Moving to the Camera to check isPartON the nozzle.");
+                	  fireTextStatus("Moving to the Camera to check isPartON the nozzle.");
+                	  Camera camera = VisionUtils.getBottomVisionCamera();
+                      Location move = camera.getLocation(nozzle).derive(null, null, null, wantedRotation);
+                      MovableUtils.moveToLocationAtSafeZ(nozzle, move); //move to camera location with proper rotation (0.0 or prerotated)
+                      
+                      atCameraPosition = true;
                   }
 
                 /*
@@ -864,7 +883,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                   break;
                 }
                 catch (Exception e) {
-                	//if (plannedPlacement.doSingleRetry) {pickCounter=1;} //not needed duplication probably
                 	if (pickCounter>0) {
                     	pickCounter--;
                     	fireTextStatus("Discarding %s from %s.", part.getId(), nozzle);
@@ -920,13 +938,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 //                            plannedPlacement.alignmentOffsets = new PartAlignment.PartAlignmentOffset(plannedPlacement.alignmentOffsets.getLocation().derive(null,null,null,nozzle.getLocation().getRotation()),true);
 //                        }
 //                        //                        
-                            Logger.debug("Align {} with {}", part, nozzle);
+                            Logger.debug("Align {} with {}", part.getId(), nozzle);
                             Logger.debug("Offsets {}", plannedPlacement.alignmentOffsets);
                             break;
                     }
                     else {
                         plannedPlacement.alignmentOffsets=null;
-                        Logger.debug("Not aligning {} as no compatible enabled aligners defined",part);
+                        Logger.debug("Not aligning {} as no compatible enabled aligners defined", part.getId());
                         break;
                      }
                 }

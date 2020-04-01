@@ -12,11 +12,11 @@ import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferencePnpJobProcessor.PlannedPlacement;
+//import org.openpnp.machine.reference.ReferencePnpJobProcessor.PlannedPlacement;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
 import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
+//import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -39,10 +39,8 @@ import org.simpleframework.xml.Root;
 
 public class ReferenceBottomVision implements PartAlignment {
 
-
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
-
 
     @Attribute(required = false)
     protected boolean enabled = false;
@@ -60,7 +58,7 @@ public class ReferenceBottomVision implements PartAlignment {
     protected double maxAngularOffset = 10;
 
     @ElementMap(required = false)
-    protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+    public Map<String, PartSettings> partSettingsByPartId = new HashMap<>(); //was "protected"
 
     String nozzleName = "0"; ///+
 
@@ -96,7 +94,6 @@ public class ReferenceBottomVision implements PartAlignment {
     }
     
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) {
-//    		throws Exception {
 
     	double xofs = 0;   ///+
     	double yofs = 0;
