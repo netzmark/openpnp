@@ -229,7 +229,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
 
         if (actuator != null) { 
-            int times=10;
+            int times=20; //increased from 10
             ReferenceNozzleTip nt = getNozzleTip();
             double vacuumLevel;
 
