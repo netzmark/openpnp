@@ -108,7 +108,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public final Nozzle nozzle;
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
-        public boolean fed; //outdated, to remove
+        public boolean doFedAndPickAgain = false;
         public boolean disableAlignment = false;
         public boolean doSingleRetry = false;
         public boolean stepComplete;
@@ -695,122 +695,268 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      * So I did it to don't duplicate the code and get better transparency in 
      * doFeedAndPick and in new doAlign.
      */
+    int cnt=0;
     private void subFeedAndPick(PlannedPlacement plannedPlacement) throws Exception{
         Nozzle nozzle = plannedPlacement.nozzle;
         JobPlacement jobPlacement = plannedPlacement.jobPlacement;
         Placement placement = jobPlacement.placement;
         Part part = placement.getPart();
 
-        Exception lastError = null;
-        Feeder lastErrorFeeder = null;
-        while (true) {
-           // Find a compatible, enabled feeder
-           Feeder feeder;
-           try {
-               feeder = findFeeder(machine, part);
-           }
-           catch (Exception e) { 
-               if (lastError != null) { 
-                   throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
-                       part.getId(), 
-                       lastErrorFeeder.getName(), 
-                       lastError.getMessage()), 
-                       lastError);
-               }
-               else {
-                   if (isAutoSkipDisabledFeeders()) {
-                       makeSkip=true; 
-                   }
-                   throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
-                   }
-               }
-               
-               // Feed the part
-               plannedPlacement.feeder = feeder;
-               try {
-                   // Try to feed the part. If it fails, retry the specified number of times
-                   // before giving up.
-                   retry(1 + feeder.getRetryCount(), () -> { 
-                       fireTextStatus("Feeding %s from %s for %s.", part.getId(),
-                               feeder.getName(), placement.getId());
-                               Logger.debug("Attempt Feed {} from {} with {}.",
-                               new Object[] {part, feeder, nozzle});
+		while (true) {
+			
+    // Find the feeder
+	        Exception lastError = null;
+	        Feeder lastErrorFeeder = null;
+	        
+	        while (true) {
+	           // Find a compatible, enabled feeder
+	           Feeder feeder;
+	           try {
+	               feeder = findFeeder(machine, part);
+	           }
+	           catch (Exception e) { 
+	               if (lastError != null) { 
+	                   throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+	                       part.getId(), 
+	                       lastErrorFeeder.getName(), 
+	                       lastError.getMessage()), 
+	                       lastError);
+	               }
+	               else {
+	                   if (isAutoSkipDisabledFeeders()) {
+	                       makeSkip=true; 
+	                   }
+	                   throw new Exception(String.format("Unable to feed/pick %s. No enabled feeder found.", part.getId()));
+	                   }
+	               }
+	               
+    // Feed the part
+	               plannedPlacement.feeder = feeder;
+	               try {
+	                   // Try to feed the part. If it fails, retry the specified number of times
+	                   // before giving up.
+	                   retry(1 + feeder.getRetryCount(), () -> { 
+	                       fireTextStatus("Feeding %s from %s for %s.", part.getId(),
+	                               feeder.getName(), placement.getId());
+	                               Logger.debug("Attempt Feed {} from {} with {}.",
+	                               new Object[] {part, feeder, nozzle});
+	
+	                       feeder.feed(nozzle);
+	                       fireTextStatus("Fed %s from %s for %s.", part.getId(),
+	                               feeder.getName(), placement.getId());
+	                       Logger.debug("Fed {} from {} with {}.",
+	                               new Object[] {part, feeder, nozzle});
+	                   });
+	                   break;
+	               }
+	               catch (Exception e) {
+	                   Logger.debug("Feed {} from {} with {} failed!",
+	                           new Object[] {part.getId(), feeder, nozzle});
+	                   if (feeder.isAutoSkipPick()){
+	                       makeSkip=true;
+	                   } 
+	               
+	               // If the feed fails, disable the feeder and continue. If there are no
+	               // more valid feeders the findFeeder() call above will throw and exit the
+	               // loop.
+	               feeder.setEnabled(false);
+	               lastErrorFeeder = feeder;
+	               lastError = e;
+	               }
+	        }
+	
+    // Pick the part
+	        Feeder feeder = plannedPlacement.feeder;
+	
+	    	if (plannedPlacement.doFedAndPickAgain==false) {
+	    		cnt=feeder.getPickRetryCount();
+	    	}
+	        try {
+	           // Get the feeder that was used to feed
+	                   fireTextStatus("Picking %s from %s for %s.", part.getId(),
+	                   feeder.getName(), placement.getId());
+	                   Logger.debug("Attempt Pick {} from {} with {}.",
+	                   new Object[] {part, feeder, nozzle});
+	
+	          // Move to the pick location and check is Nozzle is clean
+	                   Logger.debug("move to the pick location");                  
+	                   //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+	                   MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
+	                   atCameraPosition = false;
 
-                       feeder.feed(nozzle);
-                       fireTextStatus("Fed %s from %s for %s.", part.getId(),
-                               feeder.getName(), placement.getId());
-                       Logger.debug("Fed {} from {} with {}.",
-                               new Object[] {part, feeder, nozzle});
-                   });
-                   break;
-               }
-               catch (Exception e) {
-                   Logger.debug("Feed {} from {} with {} failed!",
-                           new Object[] {part.getId(), feeder, nozzle});
-                   if (feeder.isAutoSkipPick()){
-                       makeSkip=true;
-                   } 
-               
-               // If the feed fails, disable the feeder and continue. If there are no
-               // more valid feeders the findFeeder() call above will throw and exit the
-               // loop.
-               feeder.setEnabled(false);
-               lastErrorFeeder = feeder;
-               lastError = e;
-           }
-        }
-        
-      //Logger.debug("prePickTest prePickTest whether the Part is off - nozzle empty");
-      //nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
+	                   Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
+	                   fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
+	                   nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
+	          
+	                   MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle because we're at the xy pickLocation already
+	          
+	          // Pick
+	                   fireTextStatus("Picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
+	                   nozzle.pick(part);
+	          
+	          // Retract and check if Part is On
+	                   nozzle.moveToSafeZ();
+	                   nozzle.isPartOnTest();
+	                   fireTextStatus("Picked %s from %s for %s.", part.getId(),
+	                		   feeder.getName(), placement.getId());
+	                   Logger.debug("Picked {} from {} with {}", part.getId(), feeder.getName(), nozzle);
+	                   
+	          // feed after pick
+	                   if (feeder != null) {
+	                	   feeder.postPick(nozzle);
+	                   }
+	                   break;
+	           }
+	        catch (Exception e) {
+	        	if (feeder.isAutoSkipPick()) { 
+	        		makeSkip=true;
+	        		if (isAutoDisableFeeder() && !isDisableAutomatics()) {
+	                  feeder.setEnabled(false);
+	        		}
+	        	}
+	        	if (cnt>0) {
+	        		cnt--;
+	        		plannedPlacement.doFedAndPickAgain = true;
+	               }
+	        	else {
+	        		//plannedPlacement.doFedAndPickAgain = false; //uncomment to have retry probes with counter number instead of only one time
+	        		throw (e);
+	        	}
+	        }
+	    }
+		plannedPlacement.doFedAndPickAgain = false;
+    }  
 
-               // Pick the part
-        Feeder feeder = plannedPlacement.feeder;
-           try {
-           // Get the feeder that was used to feed
-               retry(1+feeder.getPickRetryCount(), () -> {
-                   fireTextStatus("Picking %s from %s for %s.", part.getId(),
-                   feeder.getName(), placement.getId());
-                   Logger.debug("Attempt Pick {} from {} with {}.",
-                   new Object[] {part, feeder, nozzle});
-
-           // Move to the pick location
-          Logger.debug("move to the pick location");                  
-          //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
-          MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
-          
-          Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
-          fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
-          nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
-          
-          MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
-          
-          // Pick
-          fireTextStatus("Picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
-          nozzle.pick(part);
-          
-          // Retract
-          nozzle.moveToSafeZ();
-          fireTextStatus("Picked %s from %s for %s.", part.getId(),
-          feeder.getName(), placement.getId());
-          Logger.debug("Picked {} from {} with {}", part.getId(), feeder.getName(), nozzle);
-                   
-          // feed after pick
-          if (feeder != null) {
-              feeder.postPick(nozzle);
-          }
-               });
-           }
-          catch (Exception e) {
-              if (feeder.isAutoSkipPick()) { 
-              makeSkip=true;
-              if (isAutoDisableFeeder() && !isDisableAutomatics()) {
-                  feeder.setEnabled(false);
-              }
-               } 
-               throw (e);
-           }
-           atCameraPosition = false;
-       }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //commented section intended to be removed if new procedure above will be tested and found working good
+    //left temporary for any case
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+//    private void subFeedAndPick(PlannedPlacement plannedPlacement) throws Exception{
+//        Nozzle nozzle = plannedPlacement.nozzle;
+//        JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+//        Placement placement = jobPlacement.placement;
+//        Part part = placement.getPart();
+//
+//        try {
+//        // Get the feeder that was used to feed
+//        	Feeder feeder;
+//        	feeder = findFeeder(machine, part);
+//            retry(1+feeder.getPickRetryCount(), () -> {
+//            	Exception lastError = null;
+//                Feeder lastErrorFeeder = null;
+//        
+//                while (true) {
+//
+//           // Find a compatible, enabled feeder
+////           Feeder feeder;
+//                	try {
+//                  //feeder = findFeeder(machine, part);                		
+//                	}
+//                	catch (Exception e) { 
+//                		if (lastError != null) { 
+//                			throw new Exception(String.format("Unable to feed %s. Feeder %s: %s.", 
+//                					part.getId(), 
+//                					lastErrorFeeder.getName(), 
+//                					lastError.getMessage()), 
+//                					lastError);
+//                		}
+//                		else {
+//                			if (isAutoSkipDisabledFeeders()) {
+//                				makeSkip=true; 
+//                			}
+//                			throw new Exception(String.format("Unable to feed %s. No enabled feeder found.", part.getId()));
+//                		}
+//                	}
+//
+//                	
+//                	
+//                	
+//               // Feed the part
+//                	plannedPlacement.feeder = feeder;
+//                	try {
+//                   // Try to feed the part. If it fails, retry the specified number of times
+//                   // before giving up.
+//                		retry(1 + feeder.getRetryCount(), () -> { 
+//                			fireTextStatus("Feeding %s from %s for %s.", part.getId(),
+//                					feeder.getName(), placement.getId());
+//                			Logger.debug("Attempt Feed {} from {} with {}.",
+//                					new Object[] {part, feeder, nozzle});
+//
+//                			feeder.feed(nozzle);
+//                			fireTextStatus("Fed %s from %s for %s.", part.getId(),
+//                					feeder.getName(), placement.getId());
+//                			Logger.debug("Fed {} from {} with {}.",
+//                					new Object[] {part, feeder, nozzle});
+//                		});
+//                		break;
+//                	}
+//                	catch (Exception e) {
+//                		Logger.debug("Feed {} from {} with {} failed!",
+//                				new Object[] {part.getId(), feeder, nozzle});
+//                		if (feeder.isAutoSkipPick()){
+//                			makeSkip=true;
+//                		} 
+//               
+//                		// If the feed fails, disable the feeder and continue. If there are no
+//                		// more valid feeders the findFeeder() call above will throw and exit the
+//                		// loop.
+//                		feeder.setEnabled(false);
+//                		lastErrorFeeder = feeder;
+//                		lastError = e;
+//                	}
+//                }
+// 
+//                // Pick the part
+//                fireTextStatus("Picking %s from %s for %s.", part.getId(),
+//                		feeder.getName(), placement.getId());
+//                Logger.debug("Attempt Pick {} from {} with {}.",
+//                		new Object[] {part, feeder, nozzle});
+//
+//                // Move to the pick location
+//                Logger.debug("move to the pick location");                  
+//                //MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+//                MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation().derive(null, null, 0.0, null)); //move to pick location but don't low down nozzle at the destination
+//          
+//                Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
+//                fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
+//                nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
+//          
+//                MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
+//          
+//                // Pick
+//                fireTextStatus("Picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
+//                nozzle.pick(part);
+//          
+//                // Retract
+//                nozzle.moveToSafeZ();
+//				fireTextStatus("Picked %s from %s for %s.", part.getId(),
+//				feeder.getName(), placement.getId());
+//				Logger.debug("Picked {} from {} with {}", part.getId(), feeder.getName(), nozzle);
+//                   
+//				// feed after pick
+//				if (feeder != null) {
+//					feeder.postPick(nozzle);
+//				}
+//            });
+//        }
+//        catch (Exception e) {
+//        	Feeder feeder = plannedPlacement.feeder;
+//        	if (feeder.isAutoSkipPick()) { 
+//        		makeSkip=true;
+//        		if (isAutoDisableFeeder() && !isDisableAutomatics()) {
+//        			feeder.setEnabled(false);
+//        		}
+//        	} 
+//        	throw (e);
+//        }
+//        atCameraPosition = false;
+//    }    
+    
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+    
+    
+    
+    
     
     /*
      * INFO: This is modified doAlign.

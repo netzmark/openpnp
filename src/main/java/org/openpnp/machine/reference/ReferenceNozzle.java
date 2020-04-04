@@ -27,7 +27,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.JobProcessor;//
+import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -260,7 +260,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
      
      // Second vacuum check (after nozzle rising)       
-            isPartOnTest();
+            //isPartOnTest(); //void calling moved to the ReferencePnpJobProcessor
             
 /*
  * This section is commented in relation to added function in RefererencePnpJobProcessor to check isPartOn
