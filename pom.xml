@@ -410,9 +410,5 @@
 			<id>openpnp</id>
 			<url>https://github.com/openpnp/openpnp-maven-repo/raw/develop</url>
 		</repository>
-		<repository>
-			<id>javacv</id>
-			<url>https://maven2.javacv.googlecode.com/git</url>
-		</repository>
 	</repositories>
 </project>
