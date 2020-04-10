@@ -786,7 +786,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
 	                   Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
 	                   fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
-	                   //nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
+	                   nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
 	          
 	                   MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle because we're at the xy pickLocation already
 	          
@@ -919,7 +919,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 //          
 //                Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
 //                fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
-//                nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
+//                //nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
 //          
 //                MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle
 //          
@@ -1013,9 +1013,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                       Logger.debug("Moving to the Camera to check isPartON the nozzle.");
                 	  fireTextStatus("Moving to the Camera to check isPartON the nozzle.");
                 	  Camera camera = VisionUtils.getBottomVisionCamera();
+                	  if (camera!=null) {
                       Location move = camera.getLocation(nozzle).derive(null, null, null, wantedRotation);
                       MovableUtils.moveToLocationAtSafeZ(nozzle, move); //move to camera location with proper rotation (0.0 or prerotated)
-                      
+                	  }
                       atCameraPosition = true;
                   }
 
@@ -1142,7 +1143,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected void doPlace() throws Exception {
         // My customization: placement the parts in reversed sequence than picking N1N2N3>N3N2N1
-        Collections.reverse(plannedPlacements);
+        //Collections.reverse(plannedPlacements);
         //    	
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {
