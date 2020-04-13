@@ -161,8 +161,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 //    @Attribute(required=false)    
 //    protected static int sizeThreshold = 100000;
 
-    private FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized);
-
+    public FiniteStateMachine<State, Message> fsm = new FiniteStateMachine<>(State.Uninitialized); //was private
+    
     protected Job job;
 
     protected Machine machine;
@@ -202,14 +202,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         fsm.add(State.Plan, Message.Abort, State.Cleanup, Message.Next);
         fsm.add(State.Plan, Message.Complete, State.Cleanup, Message.Next);
 
-        fsm.add(State.ChangeNozzleTip, Message.Next, State.Feed, this::doChangeNozzleTip);
+        fsm.add(State.ChangeNozzleTip, Message.Next, State.Pick, this::doChangeNozzleTip);				//Feed into Pick
         fsm.add(State.ChangeNozzleTip, Message.Skip, State.ChangeNozzleTip, this::doSkip, Message.Next);
         fsm.add(State.ChangeNozzleTip, Message.Abort, State.Cleanup, Message.Next);
 
-        fsm.add(State.Feed, Message.Next, State.Align, this::doFeedAndPick);
-        fsm.add(State.Feed, Message.Skip, State.Feed, this::doSkip, Message.Next);
-        fsm.add(State.Feed, Message.IgnoreContinue, State.Feed, this::doIgnoreContinue, Message.Next);
-        fsm.add(State.Feed, Message.Abort, State.Cleanup, Message.Next);
+        fsm.add(State.Pick, Message.Next, State.Align, this::doFeedAndPick);							//Feed into Pick
+        fsm.add(State.Pick, Message.Skip, State.Pick, this::doSkip, Message.Next);						//Feed into Pick
+        fsm.add(State.Pick, Message.IgnoreContinue, State.Pick, this::doIgnoreContinue, Message.Next);	//Feed into Pick
+        fsm.add(State.Pick, Message.Abort, State.Cleanup, Message.Next);								//Feed into Pick
 
         // TODO: See notes on doFeedAndPick()
         // fsm.add(State.Feed, Message.Next, State.Pick, this::doFeed, Message.Next);
@@ -736,13 +736,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	                   // Try to feed the part. If it fails, retry the specified number of times
 	                   // before giving up.
 	                   retry(1 + feeder.getRetryCount(), () -> { 
-	                       fireTextStatus("Feeding %s from %s for %s.", part.getId(),
+	                       fireTextStatus("[%s] Feeding %s from %s for %s.", fsm.getState(), part.getId(),
 	                               feeder.getName(), placement.getId());
 	                               Logger.debug("Attempt Feed {} from {} with {}.",
 	                               new Object[] {part, feeder, nozzle});
 	
 	                       feeder.feed(nozzle);
-	                       fireTextStatus("Fed %s from %s for %s.", part.getId(),
+	                       fireTextStatus("[%s] Fed %s from %s for %s.", fsm.getState(), part.getId(),
 	                               feeder.getName(), placement.getId());
 	                       Logger.debug("Fed {} from {} with {}.",
 	                               new Object[] {part, feeder, nozzle});
@@ -773,7 +773,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	    	}
 	        try {
 	           // Get the feeder that was used to feed
-	                   fireTextStatus("Picking %s from %s for %s.", part.getId(),
+	                   fireTextStatus("[%s] Picking %s from %s for %s.", fsm.getState(), part.getId(),
 	                   feeder.getName(), placement.getId());
 	                   Logger.debug("Attempt Pick {} from {} with {}.",
 	                   new Object[] {part, feeder, nozzle});
@@ -785,19 +785,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 	                   atCameraPosition = false;
 
 	                   Logger.debug("Is nozzle clean before picking? {}", nozzle.getId());
-	                   fireTextStatus("Checking is nozzle clean before picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
+	                   fireTextStatus("[%s] Checking is nozzle clean before pick %s (%s) from feeder: %s.", fsm.getState(), part.getId(), placement.getId(), feeder.getName());
 	                   nozzle.isPartOffTest(); //this is the procedure to check before the pick whether the nozzle is empty
 	          
 	                   MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation()); //in fact this is only a low down the nozzle because we're at the xy pickLocation already
 	          
 	          // Pick
-	                   fireTextStatus("Picking %s (%s) from feeder: %s.", part.getId(), placement.getId(), feeder.getName());
+	                   fireTextStatus("[%s] Picking %s (%s) from feeder: %s.", fsm.getState(), part.getId(), placement.getId(), feeder.getName());
 	                   nozzle.pick(part);
 	          
 	          // Retract and check if Part is On
 	                   nozzle.moveToSafeZ();
-	                   nozzle.isPartOnTest();
-	                   fireTextStatus("Picked %s from %s for %s.", part.getId(),
+	                   //nozzle.isPartOnTest();
+	                   fireTextStatus("[%s] Picked %s from %s for %s.", fsm.getState(), part.getId(),
 	                		   feeder.getName(), placement.getId());
 	                   Logger.debug("Picked {} from {} with {}", part.getId(), feeder.getName(), nozzle);
 	                   
@@ -1143,7 +1143,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected void doPlace() throws Exception {
         // My customization: placement the parts in reversed sequence than picking N1N2N3>N3N2N1
-        //Collections.reverse(plannedPlacements);
+        Collections.reverse(plannedPlacements);
         //    	
         for (PlannedPlacement plannedPlacement : plannedPlacements) {
             if (plannedPlacement.stepComplete) {

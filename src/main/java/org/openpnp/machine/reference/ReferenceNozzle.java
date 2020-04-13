@@ -28,6 +28,7 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.JobProcessor;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzle;
@@ -149,25 +150,27 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public ReferenceNozzleTip getNozzleTip() {
         return nozzleTip;
     }
-    
+
     @Override
     public void isPartOffTest() throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
-        
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+
+    	Machine machine = Configuration.get().getMachine();
+    	ReferencePnpJobProcessor rpjp = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
+    	Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
             ReferenceNozzleTip nt = getNozzleTip();
             double vacuumLevel = Double.parseDouble(actuator.read());
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel < (nt.getVacuumLevelPartOff()-50)) { //50 is offset, if it is >(Off-offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Prepick test failure: Vacuum level %f is lower than expected value of %f for part Off. Part may be stuck to nozzle.",
+                        "[%s] Prepick test failure: Vacuum level %f is lower than expected value of %f for part Off. Part may be stuck to nozzle.", rpjp.fsm.getState(),
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
             else {
                 if (vacuumLevel > (nt.getVacuumLevelPartOff()+50)) { //50 is offset, if it is >(Off+offset) means nozzle is not empty before pick
                     throw new Exception(String.format(
-                        "Prepick test failure: Vacuum level %f is higher than expected value of %f (+50 offset) for part Off. Part may be stuck to nozzle.",
+                        "[%s] Prepick test failure: Vacuum level %f is higher than expected value of %f (+50 offset) for part Off. Part may be stuck to nozzle.", rpjp.fsm.getState(),
                         vacuumLevel, nt.getVacuumLevelPartOff()));
                 }
             }
@@ -176,22 +179,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void isPartOnTest() throws Exception { //Marek: this is the procedure to check vacuum before the pick wether the nozzle is empty
-        
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+
+    	Machine machine = Configuration.get().getMachine();
+    	ReferencePnpJobProcessor rpjp = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
+    	Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
         if (actuator != null) {
             ReferenceNozzleTip nt = getNozzleTip();
             double vacuumLevel = (Double.parseDouble(actuator.read()) -5);
             if (invertVacuumSenseLogic) {
                 if (vacuumLevel > nt.getVacuumLevelPartOn()) {
                     throw new Exception(String.format(
-                        "Pick failure: Vacuum level %f is higher than expected value of %f for part On. Part may have failed to pick or feeder is empty.",
+                        "[%s] Pick failure: Vacuum level %f is higher than expected value of %f for part On. Part may have failed to pick or feeder is empty.", rpjp.fsm.getState(),
                             vacuumLevel, nt.getVacuumLevelPartOn()));
                 }
             }
             else {
                 if (vacuumLevel < (nt.getVacuumLevelPartOn()) -5) { 
                     throw new Exception(String.format(
-                            "Pick failure: Vacuum level %f (-5 offset) is lower than expected value of %f for part On. Part may have lost or feeder is empty.",
+                            "[%s] Pick failure: Vacuum level %f (-5 offset) is lower than expected value of %f for part On. Part may have lost or feeder is empty.", rpjp.fsm.getState(),
                              vacuumLevel, nt.getVacuumLevelPartOn()));
                 }
             }
@@ -260,7 +265,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
      
      // Second vacuum check (after nozzle rising)       
-            //isPartOnTest(); //void calling moved to the ReferencePnpJobProcessor
+            isPartOnTest(); //it must be here to realize alarm message in case of manual feeding
             
 /*
  * This section is commented in relation to added function in RefererencePnpJobProcessor to check isPartOn
