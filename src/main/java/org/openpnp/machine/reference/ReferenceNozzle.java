@@ -508,6 +508,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 actDown.actuate(false);
             }
         }
+        
+//    //Experimental actDown control
+//        if(actDown!=null) {        
+//            if(location.getZ()<currentLocation.getZ() && location.getZ()<0) {
+//                Logger.debug("{}.moveTo(Nozzle Down)", getId());
+//                actDown.actuate(true);
+//            }
+//            if(location.getZ()>currentLocation.getZ() && location.getZ()>=0) {
+//                Logger.debug("{}.moveTo(Nozzle Up)", getId());
+//                actDown.actuate(false);
+//            }
+//        }
+      
+        
 
     // avoid bug inside Gcode driver
         if (Double.isNaN(location.getX())) {
