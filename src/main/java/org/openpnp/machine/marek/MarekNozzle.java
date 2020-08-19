@@ -9,7 +9,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Movable.MoveToOption;
 import org.pmw.tinylog.Logger;
 
 public class MarekNozzle extends ReferenceNozzle {
@@ -23,7 +22,7 @@ public class MarekNozzle extends ReferenceNozzle {
     
     @Override
     public void moveTo(Location location, double speed, MoveToOption... options) throws Exception {
-        // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
+    	// Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
         // longer be used. It will be removed eventually:
         // https://github.com/openpnp/openpnp/issues/255
         // In the mean time, since Double.NaN would cause a problem for calibration, we shortcut
@@ -65,50 +64,61 @@ public class MarekNozzle extends ReferenceNozzle {
         }
 
     // Cris's change: inhibit motion if no change, to inhibit unnecessary move repetition
-        int n=0;
-        if (location.getX()==currentLocation.getX()) { n++;
-            location = location.derive(Double.NaN, null, null, null);
-        }
-        if (location.getY()==currentLocation.getY()) { n++;
-            location = location.derive(null,Double.NaN, null, null);
-        }
-        if (location.getZ()==currentLocation.getZ()) { n++;
-            location = location.derive(null,null,Double.NaN, null);
-        }
-        if (location.getRotation()==currentLocation.getRotation()) { n++;
-            location = location.derive(null,null,null,Double.NaN);
-        }
-        if(n==4) { return; }
+//        int n=0;
+//        if (location.getX()==currentLocation.getX()) { n++;
+//            location = location.derive(Double.NaN, null, null, null);
+//        }
+//        if (location.getY()==currentLocation.getY()) { n++;
+//            location = location.derive(null,Double.NaN, null, null);
+//        }
+//        if (location.getZ()==currentLocation.getZ()) { n++;
+//            location = location.derive(null,null,Double.NaN, null);
+//        }
+//        if (location.getRotation()==currentLocation.getRotation()) { n++;
+//            location = location.derive(null,null,null,Double.NaN);
+//        }
+//        if(n==4) { return; }
 
     //Marek change: section below is to fire actuator for pneumatic head control in relation to Z location (change at -2)
+//        if(getDownActuator()!=null) {
+//            if(location.getZ()<-2 && currentLocation.getZ() >=-2) {
+//                Logger.debug("{}.moveTo(Nozzle Down)", getId());
+//                getDownActuator().actuate(true);
+//            }
+//            if(location.getZ()>=-2 && currentLocation.getZ() <-2) {
+//                Logger.debug("{}.moveTo(Nozzle Up)", getId());
+//                getDownActuator().actuate(false);
+//            }
+//        }
+        
         if(getDownActuator()!=null) {
-            if(location.getZ()<-2 && currentLocation.getZ() >=-2) {
+            if(location.getZ()<currentLocation.getZ() && location.getZ()<0) {
                 Logger.debug("{}.moveTo(Nozzle Down)", getId());
                 getDownActuator().actuate(true);
             }
-            if(location.getZ()>=-2 && currentLocation.getZ() <-2) {
+            if(location.getZ()>currentLocation.getZ() && location.getZ()>=0) {
                 Logger.debug("{}.moveTo(Nozzle Up)", getId());
                 getDownActuator().actuate(false);
             }
         }
 
     // Cri's change: avoid bug inside Gcode driver - it seems be higher code duplication, isn't it?
-        if (Double.isNaN(location.getX())) {
-            location = location.derive(currentLocation.getX(), null, null, null);
-        }
-        if (Double.isNaN(location.getY())) {
-            location = location.derive(null, currentLocation.getY(), null, null);
-        }
-        if (Double.isNaN(location.getZ())) {
-            location = location.derive(null, null, currentLocation.getZ(), null);
-        }
-        if (Double.isNaN(location.getRotation())) {
-            location = location.derive(null, null, null, currentLocation.getRotation());
-        }
+//        if (Double.isNaN(location.getX())) {
+//            location = location.derive(currentLocation.getX(), null, null, null);
+//        }
+//        if (Double.isNaN(location.getY())) {
+//            location = location.derive(null, currentLocation.getY(), null, null);
+//        }
+//        if (Double.isNaN(location.getZ())) {
+//            location = location.derive(null, null, currentLocation.getZ(), null);
+//        }
+//        if (Double.isNaN(location.getRotation())) {
+//            location = location.derive(null, null, null, currentLocation.getRotation());
+//        }
 
         location = location.convertToUnits(loc.getUnits()); // convert units back; // Cri's change
 
-        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed, options);
+        ((ReferenceHead) getHead()).moveTo(this, location, getHead().getMaxPartSpeed() * speed);
         getMachine().fireMachineHeadActivity(head);
     }
 
